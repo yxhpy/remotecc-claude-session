@@ -1,0 +1,493 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>西南交通大学犀浦校区首页原型</title>
+    <meta
+      name="description"
+      content="面向西南交通大学犀浦校区的高保真首页原型，突出主校区定位、轨道交通气质、教学科研与校园生活。"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+    <script defer src="./app.js"></script>
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="site-header" id="top">
+        <div class="brand-lockup">
+          <span class="brand-mark">1896</span>
+          <div class="brand-copy">
+            <p class="brand-cn">西南交通大学</p>
+            <p class="brand-en">XIPU CAMPUS PROTOTYPE</p>
+          </div>
+        </div>
+        <button
+          class="nav-toggle"
+          id="navToggle"
+          aria-expanded="false"
+          aria-controls="siteNav"
+          aria-label="切换导航"
+        >
+          <span></span>
+          <span></span>
+        </button>
+        <nav class="site-nav" id="siteNav" aria-label="主导航">
+          <a href="#overview" data-section="overview">校区概览</a>
+          <a href="#highlights" data-section="highlights">主场亮点</a>
+          <a href="#today" data-section="today">今日犀浦</a>
+          <a href="#transport" data-section="transport">交通与到达</a>
+          <a href="#academics" data-section="academics">教学科研</a>
+          <a href="#living" data-section="living">校园生活</a>
+          <a href="#news" data-section="news">新闻公告</a>
+          <a href="#metrics" data-section="metrics">数据交大</a>
+        </nav>
+      </header>
+
+      <main>
+        <section class="hero reveal-section" id="overview">
+          <div class="hero-backdrop">
+            <div class="hero-grid"></div>
+            <div class="hero-orbit hero-orbit-a"></div>
+            <div class="hero-orbit hero-orbit-b"></div>
+            <div class="hero-track hero-track-a"></div>
+            <div class="hero-track hero-track-b"></div>
+          </div>
+
+          <div class="hero-inner">
+            <div class="hero-copy">
+              <p class="eyebrow">成都 · 郫都区 · 主校区门户原型</p>
+              <h1>
+                西向城市轴线上的
+                <span>交大主场</span>
+              </h1>
+              <p class="hero-lead">
+                犀浦校区位于成都市郫都区犀安路999号，是西南交通大学在成都的重要主校区。
+                行政办公、多数学院与实验室在此集聚，校园空间的组织方式也始终围绕
+                “教学、科研、生活一体化”展开。
+              </p>
+
+              <div class="hero-actions">
+                <a class="button button-primary" href="#transport">查看到达路径</a>
+                <a class="button button-secondary" href="#academics">浏览教学科研</a>
+              </div>
+
+              <dl class="hero-facts">
+                <div>
+                  <dt>校区地址</dt>
+                  <dd>成都市郫都区犀安路999号</dd>
+                </div>
+                <div>
+                  <dt>邮政编码</dt>
+                  <dd>611756</dd>
+                </div>
+                <div>
+                  <dt>主轴气质</dt>
+                  <dd>轨道交通、工程教育、开放通达</dd>
+                </div>
+              </dl>
+
+              <div class="hero-signal-strip">
+                <article>
+                  <h4>新生入校</h4>
+                  <p>报到动线 / 教学区首站 / 住宿服务联动</p>
+                </article>
+                <article>
+                  <h4>访客来访</h4>
+                  <p>会议到访 / 图书馆界面 / 城市轨交换乘</p>
+                </article>
+                <article>
+                  <h4>校友返校</h4>
+                  <p>校庆活动 / 校园更新 / 主场记忆回流</p>
+                </article>
+              </div>
+            </div>
+
+            <div class="hero-visual" aria-hidden="true">
+              <div class="campus-plane">
+                <div class="plane-ring plane-ring-large"></div>
+                <div class="plane-ring plane-ring-small"></div>
+                <div class="plane-grid"></div>
+                <div class="plane-node node-east-gate">
+                  <span>东门界面</span>
+                </div>
+                <div class="plane-node node-library">
+                  <span>图书馆</span>
+                </div>
+                <div class="plane-node node-building-three">
+                  <strong>3号教学楼</strong>
+                  <em>鲁班奖地标</em>
+                </div>
+                <div class="plane-node node-xipu-station">
+                  <span>犀浦站接入</span>
+                </div>
+                <div class="plane-ribbon">
+                  主校区 / 研究与教学核心 / 校园空间持续更新
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="reveal-section today-band" id="today">
+          <div class="section-header compact">
+            <p class="section-kicker">Real-Time Campus</p>
+            <h2>今日犀浦 / Today at Xipu</h2>
+            <p>把主校区首页做得像正在发生，而不是静态目录。</p>
+          </div>
+
+          <div class="today-cards">
+            <article class="today-card">
+              <span class="card-time">07:40</span>
+              <h3>早高峰接入</h3>
+              <p>犀浦站与校门界面同步进入高流量时段，门户信息应优先服务到达。</p>
+            </article>
+            <article class="today-card">
+              <span class="card-time">10:15</span>
+              <h3>教学中段</h3>
+              <p>课程、实验、图书馆与学院行政信息需要在同一页面被快速触达。</p>
+            </article>
+            <article class="today-card">
+              <span class="card-time">15:30</span>
+              <h3>公共服务</h3>
+              <p>停车、维修、空间更新、访客路径不应被隐藏在深层页面。</p>
+            </article>
+            <article class="today-card">
+              <span class="card-time">20:10</span>
+              <h3>夜间校园</h3>
+              <p>晚课、自习、归寝与安保提示共同构成主校区的夜间秩序。</p>
+            </article>
+          </div>
+        </section>
+
+        <section class="campus-thesis reveal-section">
+          <div class="section-header compact">
+            <p class="section-kicker">Campus Thesis</p>
+            <h2>不是单一入口页，而是一座主校区的空间秩序总览</h2>
+          </div>
+          <div class="thesis-layout">
+            <article class="thesis-quote">
+              <p>
+                这份原型把犀浦校区理解为一座
+                <strong>“教学科研与城市轨道交通逻辑相互咬合的主校区”</strong>：
+                信息结构清晰、空间感充足、生活服务与学术能量并置，而不是堆砌教育机构常见的营销组件。
+              </p>
+            </article>
+            <div class="thesis-stream">
+              <div>
+                <span class="stream-index">01</span>
+                <p>主校区身份需要在首屏就被读懂，而不是埋在二级页面里。</p>
+              </div>
+              <div>
+                <span class="stream-index">02</span>
+                <p>轨道交通与工程教育气质，应该体现在版式、节奏和信息密度里。</p>
+              </div>
+              <div>
+                <span class="stream-index">03</span>
+                <p>校园更新、公共服务、学习生活场景，要和科研表达放在同一张页面上。</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="highlights reveal-section" id="highlights">
+          <div class="section-header">
+            <p class="section-kicker">Main Campus Highlights</p>
+            <h2>主场亮点</h2>
+            <p>
+              从校区身份到空间品质，再到轨道交通工程学科的识别度，首页的第一组信息必须同时传达“主场感”和“专业感”。
+            </p>
+          </div>
+
+          <div class="highlight-grid">
+            <article class="highlight-band">
+              <span class="highlight-number">A</span>
+              <div>
+                <h3>主校区中枢</h3>
+                <p>
+                  官方信息将犀浦校区描述为学校的主要校区，行政办公室以及多数学院和实验室位于这里，
+                  因而页面叙事以“主场总览”而不是“单点介绍”展开。
+                </p>
+              </div>
+            </article>
+
+            <article class="highlight-band">
+              <span class="highlight-number">B</span>
+              <div>
+                <h3>轨道交通气质</h3>
+                <p>
+                  版式以轨道、环线、节点与界面为隐喻，强调学校长期形成的交通工程与城市基础设施研究气质。
+                </p>
+              </div>
+            </article>
+
+            <article class="highlight-band">
+              <span class="highlight-number">C</span>
+              <div>
+                <h3>3号教学楼地标</h3>
+                <p>
+                  3号教学楼获得鲁班奖，是东门附近的重要地标建筑。原型将其作为首屏视觉锚点之一，
+                  以体现犀浦校园“高标准教学空间”的当代表达。
+                </p>
+              </div>
+            </article>
+
+            <article class="highlight-band">
+              <span class="highlight-number">D</span>
+              <div>
+                <h3>幸福、和谐、美丽</h3>
+                <p>
+                  停车、公共服务与基础设施提升，不只是后勤信息，而是校园治理能力与学习生活品质的直观体现。
+                </p>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section class="transport reveal-section" id="transport">
+          <div class="section-header">
+            <p class="section-kicker">Access & Arrival</p>
+            <h2>交通与到达</h2>
+            <p>
+              把到达校区写清楚，不只是便利信息，更是在回应犀浦校区与成都西向城市发展、轨道交通网络之间的真实关系。
+            </p>
+          </div>
+
+          <div class="transport-layout">
+            <div class="transport-rail">
+              <div class="rail-stop">
+                <span class="rail-label">双流国际机场</span>
+                <p>出租车约50分钟；地铁可通过10号线、7号线、2号线接入犀浦站。</p>
+              </div>
+              <div class="rail-stop">
+                <span class="rail-label">成都东站</span>
+                <p>地铁2号线可直接连接犀浦站，适合作为高铁到达后的校园入口路径。</p>
+              </div>
+              <div class="rail-stop">
+                <span class="rail-label">天府国际机场</span>
+                <p>可通过成都轨道交通网络换乘至犀浦方向，形成远距离到校的轨道接入逻辑。</p>
+              </div>
+            </div>
+
+            <div class="transport-panel">
+              <h3>到达信息的页面表达</h3>
+              <ul>
+                <li>首选显示“犀浦站接入”与“城市轨道换乘”而不是单一地图截图。</li>
+                <li>用清晰节点替代长段文字，让未来新生、访客与校友都能一眼抓住路径。</li>
+                <li>将地址与邮编固定呈现在全页高可见区域，强化页面的权威性。</li>
+              </ul>
+              <p class="transport-address">
+                中国四川省成都市郫都区犀安路999号 · 611756
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section class="academics reveal-section" id="academics">
+          <div class="section-header">
+            <p class="section-kicker">Teaching & Research</p>
+            <h2>教学科研</h2>
+            <p>
+              犀浦校区的首页不该只展示活动新闻，更要让人感受到教学空间、实验环境与学术组织方式的尺度。
+            </p>
+          </div>
+
+          <div class="academics-layout">
+            <article class="landmark-panel">
+              <p class="panel-tag">Landmark Focus</p>
+              <h3>3号教学楼：东门界面的当代地标</h3>
+              <p>
+                官方报道显示，3号教学楼位于东门入口附近，与图书馆相望，是犀浦校区的重要空间地标。
+                这座获得鲁班奖的教学综合体，也成为页面视觉语言里最适合被放大的建筑性符号。
+              </p>
+              <div class="landmark-metrics">
+                <span>鲁班奖</span>
+                <span>智慧教室群</span>
+                <span>东门界面</span>
+              </div>
+            </article>
+
+            <div class="academic-columns">
+              <article>
+                <h3>人才培养</h3>
+                <p>
+                  从本科生教育到研究生教育，再到国际教育与继续教育，页面结构延续官方门户的学术信息脉络，
+                  但以更清晰的一级导航方式呈现。
+                </p>
+              </article>
+              <article>
+                <h3>科学研究</h3>
+                <p>
+                  以交通与工程教育为识别底色，突出科研基地、科研成果与团队协同，而不是把“科研”收缩成单一新闻栏目。
+                </p>
+              </article>
+              <article>
+                <h3>空间组织</h3>
+                <p>
+                  通过“大楼、图书馆、学习界面、服务界面”的分层表达，让校园既像一个研究场，也像一座运行良好的大学城市。
+                </p>
+              </article>
+            </div>
+          </div>
+        </section>
+
+        <section class="living reveal-section" id="living">
+          <div class="section-header">
+            <p class="section-kicker">Campus Life</p>
+            <h2>校园生活</h2>
+            <p>
+              校园生活板块并不追求花哨，而是把真实的学习、通行、停驻、休闲和服务更新转换成可感知的日常场景。
+            </p>
+          </div>
+
+          <div class="living-grid">
+            <article>
+              <h3>学习界面</h3>
+              <p>图书馆、教学楼、开放学习空间与实验环境共同构成高强度但有秩序的学习节奏。</p>
+            </article>
+            <article>
+              <h3>公共服务</h3>
+              <p>停车组织、综合楼出入口、无障碍与便民更新等基础设施改造，构成校园幸福感的底层支撑。</p>
+            </article>
+            <article>
+              <h3>学生活动</h3>
+              <p>从露天演出到体育锻炼，再到原创文化与教工活动，页面采用“轻新闻 + 重场景”的方式呈现生活张力。</p>
+            </article>
+            <article>
+              <h3>开放通达</h3>
+              <p>作为成都西向城市发展的重要大学界面，犀浦校区既是校内学习生活场，也是对外交流合作的会客厅。</p>
+            </article>
+          </div>
+        </section>
+
+        <section class="news reveal-section" id="news">
+          <div class="section-header">
+            <p class="section-kicker">News & Notices</p>
+            <h2>新闻公告</h2>
+            <p>
+              参考官方门户的组织方式，将“交大要闻、通知公告、校园更新”并置呈现。以下内容为原型示意，用于展示信息密度与版面结构。
+            </p>
+          </div>
+
+          <div class="news-board">
+            <article>
+              <header>
+                <span>交大要闻</span>
+                <a href="#top">更多</a>
+              </header>
+              <ul>
+                <li>
+                  <time datetime="2026-04-18">04.18</time>
+                  <p>先进制造学科群建设启动，主校区科研组织进入新的空间协同期。</p>
+                </li>
+                <li>
+                  <time datetime="2026-04-16">04.16</time>
+                  <p>教师“领航工作站”启动，教学支持与科研支撑界面进一步强化。</p>
+                </li>
+                <li>
+                  <time datetime="2026-04-12">04.12</time>
+                  <p>围绕服务国家战略的校园议题持续升温，主校区门户强调“研究与行动同步”。</p>
+                </li>
+              </ul>
+            </article>
+
+            <article>
+              <header>
+                <span>通知公告</span>
+                <a href="#top">更多</a>
+              </header>
+              <ul>
+                <li>
+                  <time datetime="2026-04-17">04.17</time>
+                  <p>校园文化活动预告与学习生活信息统一进入首页公告层，减少信息断层。</p>
+                </li>
+                <li>
+                  <time datetime="2026-04-15">04.15</time>
+                  <p>公共服务空间微更新阶段完成，综合楼及教学生活界面进一步优化。</p>
+                </li>
+                <li>
+                  <time datetime="2026-04-13">04.13</time>
+                  <p>校区活动与服务通知采用更紧凑的信息列表，提高移动端扫描效率。</p>
+                </li>
+              </ul>
+            </article>
+
+            <article>
+              <header>
+                <span>校园更新</span>
+                <a href="#top">更多</a>
+              </header>
+              <ul>
+                <li>
+                  <time datetime="2026-04-10">04.10</time>
+                  <p>以“幸福、和谐、美丽”交大为导向的空间更新持续推进，改善步行、停车与停驻体验。</p>
+                </li>
+                <li>
+                  <time datetime="2026-04-08">04.08</time>
+                  <p>服务设施、校园入口与学习界面逐步形成统一的视觉秩序与动线逻辑。</p>
+                </li>
+                <li>
+                  <time datetime="2026-04-05">04.05</time>
+                  <p>从单体建筑到公共开放空间，页面叙事转向“校园作为整体系统”的表达。</p>
+                </li>
+              </ul>
+            </article>
+          </div>
+        </section>
+
+        <section class="metrics reveal-section" id="metrics">
+          <div class="section-header compact">
+            <p class="section-kicker">Public Indicators</p>
+            <h2>数据交大</h2>
+            <p>以下为学校官网公开展示的学校级指标，用于在校区门户中形成更完整的规模感知。</p>
+          </div>
+
+          <div class="metrics-strip">
+            <article>
+              <strong>4546</strong>
+              <span>教职工人数</span>
+            </article>
+            <article>
+              <strong>45843</strong>
+              <span>在校学生人数</span>
+            </article>
+            <article>
+              <strong>80</strong>
+              <span>本科专业</span>
+            </article>
+            <article>
+              <strong>5000+</strong>
+              <span>校园面积（亩）</span>
+            </article>
+            <article>
+              <strong>315万</strong>
+              <span>图书馆实体馆藏</span>
+            </article>
+          </div>
+        </section>
+      </main>
+
+      <footer class="site-footer">
+        <div class="footer-main">
+          <div>
+            <p class="footer-eyebrow">Prototype Footer</p>
+            <h2>西南交通大学犀浦校区</h2>
+            <p>
+              中国四川省成都市郫都区犀安路999号 · 邮编 611756
+            </p>
+          </div>
+          <div class="footer-links">
+            <a href="#overview">校区概览</a>
+            <a href="#transport">交通与到达</a>
+            <a href="#academics">教学科研</a>
+            <a href="#living">校园生活</a>
+            <a href="#news">新闻公告</a>
+          </div>
+        </div>
+        <div class="footer-meta">
+          <p>本页面为高保真首页原型，用于测试 `remotecc` 工作流与前端展示能力，并非学校官方站点。</p>
+          <p>页面内容基于学校官网公开信息进行结构化原型表达。</p>
+        </div>
+      </footer>
+    </div>
+  </body>
+</html>

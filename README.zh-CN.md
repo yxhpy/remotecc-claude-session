@@ -128,6 +128,8 @@ python3 scripts/remotecc.py create demo user@host --local-dir . --profile standa
 python3 scripts/remotecc.py ready demo --json
 ```
 
+如果 Claude 卡在工作区信任确认，或卡在编辑/Bash 审批页，`ready --json` 会返回 `ready: false`，并附带 `blocker_kind` 和 `blocker_reason`。
+
 启动远程 Claude Code：
 
 ```bash
@@ -138,6 +140,23 @@ python3 scripts/remotecc.py start demo
 
 ```bash
 python3 scripts/remotecc.py send demo --text "Inspect this repo and summarize the entrypoint."
+```
+
+如果 Claude 停在交互式审批页，`send` 会以退出码 `2` 返回，并打印 `blocked:` 提示，而不是误报成功。
+
+放行 blocker：
+
+```bash
+python3 scripts/remotecc.py approve demo
+python3 scripts/remotecc.py approve demo --mode session
+```
+
+如果任务更长或输出更多，建议异步提交，并且只观察短尾输出：
+
+```bash
+python3 scripts/remotecc.py send demo --text "Implement the change." --no-wait
+python3 scripts/remotecc.py observe demo
+python3 scripts/remotecc.py observe demo --follow
 ```
 
 把远程修改拉回本地：
@@ -189,7 +208,7 @@ Use $remotecc-claude-session to create a remote Claude session on user@host for 
 1. `create`
 2. `ready --json`
 3. `start`
-4. `send` 或 `chat`
+4. `send`，或 `send --no-wait` + `observe`
 5. `pull`
 6. `close`
 
@@ -214,6 +233,7 @@ python3 scripts/remotecc.py connect demo
 
 - 人类可以完成 bootstrap
 - skill 或自动化只有在 `ready --json` 通过后才继续
+- 对长任务，skill 或自动化应优先使用 `send --no-wait` 配合 `observe --json`，不要反复把 `capture` 当默认轮询接口
 
 ## 模型选择
 

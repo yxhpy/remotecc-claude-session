@@ -123,6 +123,8 @@ Check non-interactive readiness:
 python3 scripts/remotecc.py ready demo --json
 ```
 
+If Claude is blocked on a workspace-trust prompt or an edit/bash approval prompt, `ready --json` returns `ready: false` and includes `blocker_kind` plus `blocker_reason`.
+
 Start Claude Code:
 
 ```bash
@@ -133,6 +135,23 @@ Send one request:
 
 ```bash
 python3 scripts/remotecc.py send demo --text "Inspect this repo and summarize the entrypoint."
+```
+
+If Claude stops at an interactive approval screen, `send` exits with code `2` and prints a `blocked:` message instead of silently reporting success.
+
+Approve a blocker:
+
+```bash
+python3 scripts/remotecc.py approve demo
+python3 scripts/remotecc.py approve demo --mode session
+```
+
+For longer or noisier work, submit asynchronously and observe only a short pane tail:
+
+```bash
+python3 scripts/remotecc.py send demo --text "Implement the change." --no-wait
+python3 scripts/remotecc.py observe demo
+python3 scripts/remotecc.py observe demo --follow
 ```
 
 Pull changes back:
@@ -184,7 +203,7 @@ Recommended operational flow:
 1. `create`
 2. `ready --json`
 3. `start`
-4. `send` or `chat`
+4. `send`, or `send --no-wait` + `observe`
 5. `pull`
 6. `close`
 
@@ -209,6 +228,7 @@ For skills and automations, the rule is simple:
 
 - a human may bootstrap
 - automation should only continue when `ready --json` says the session is usable
+- for longer tasks, automation should prefer `send --no-wait` plus `observe --json` over repeatedly calling `capture`
 
 ## Claude Model Routing
 

@@ -16,6 +16,7 @@ from remotecc.store import SessionRecord, SessionStore, utc_now
 DEFAULT_REMOTE_ROOT = "~/.remotecc/workspaces"
 DEFAULT_CLAUDE_COMMAND = "claude"
 DEFAULT_CAPTURE_LINES = 160
+DEFAULT_OBSERVE_LINES = 32
 DEFAULT_EXCLUDES = [".git/", ".remotecc/", ".DS_Store"]
 MODEL_SWITCH_TIMEOUT = 20
 
@@ -74,6 +75,23 @@ class ReadinessStatus:
     configured_model: str | None
     configured_profile: str | None
     reason: str
+    blocker_kind: str | None = None
+    blocker_reason: str | None = None
+
+
+@dataclass
+class ObserveStatus:
+    state: str
+    reason: str
+    likely_done: bool
+    has_error: bool
+    changed_during_sample: bool
+    control_master_active: bool
+    remote_status: RemoteStatus
+    blocker_kind: str | None = None
+    blocker_reason: str | None = None
+    error_reason: str | None = None
+    tail: str = ""
 
 
 def fail(message: str) -> int:
@@ -182,6 +200,15 @@ def print_model_catalog(*, json_mode: bool) -> None:
     print("Notes:")
     for key, value in payload["notes"].items():
         print(f"{key}: {value}")
+
+
+def trim_output_tail(output: str, *, lines: int) -> str:
+    if lines <= 0:
+        return ""
+    tail_lines = output.splitlines()[-lines:]
+    if not tail_lines:
+        return ""
+    return "\n".join(tail_lines) + ("\n" if output.endswith("\n") else "")
 
 
 def resolve_remote_home(
@@ -383,6 +410,53 @@ def probe_remote_safe(record: SessionRecord, runner: RemoteRunner) -> RemoteStat
         raise
 
 
+def detect_interactive_blocker(output: str) -> tuple[str, str] | None:
+    normalized = trim_output_tail(output, lines=40).lower()
+    if "quick safety check:" in normalized and "yes, i trust this folder" in normalized:
+        return ("workspace_trust", "workspace trust confirmation is pending")
+    if "do you want to create " in normalized or "do you want to make this edit" in normalized:
+        return ("edit_approval", "file edit approval is pending")
+    if "bash command" in normalized and "do you want to proceed?" in normalized:
+        return ("bash_approval", "bash/tool approval is pending")
+    return None
+
+
+def detect_recent_error(output: str) -> str | None:
+    for raw_line in trim_output_tail(output, lines=40).splitlines():
+        line = raw_line.strip().lower()
+        if not line:
+            continue
+        if line.startswith("traceback (most recent call last):"):
+            return "python traceback detected in recent pane output"
+        if line.startswith("error: "):
+            return raw_line.strip()
+        if "permission denied" in line:
+            return raw_line.strip()
+        if "no such file or directory" in line:
+            return raw_line.strip()
+        if "command not found" in line:
+            return raw_line.strip()
+        if "exited with code " in line:
+            return raw_line.strip()
+    return None
+
+
+def probe_interactive_blocker(
+    record: SessionRecord,
+    runner: RemoteRunner,
+    *,
+    remote_status: RemoteStatus | None = None,
+    lines: int = DEFAULT_CAPTURE_LINES,
+) -> tuple[str, str] | None:
+    status = remote_status or probe_remote_safe(record, runner)
+    if not status.tmux_exists:
+        return None
+    try:
+        return detect_interactive_blocker(capture_pane(record, runner, lines=lines))
+    except RemoteCommandError:
+        return None
+
+
 def check_readiness(record: SessionRecord, runner: RemoteRunner) -> ReadinessStatus:
     control_master_active = True
     if record.auth_mode == "control_master":
@@ -399,6 +473,8 @@ def check_readiness(record: SessionRecord, runner: RemoteRunner) -> ReadinessSta
                 configured_model=record.model,
                 configured_profile=record.model_profile,
                 reason="control master is not active; run `remotecc connect <session>` first",
+                blocker_kind=None,
+                blocker_reason=None,
             )
 
     script = f"""
@@ -433,6 +509,8 @@ printf 'tmux_exists=%s\\n' "$tmux_exists"
             configured_model=record.model,
             configured_profile=record.model_profile,
             reason=str(exc),
+            blocker_kind=None,
+            blocker_reason=None,
         )
 
     values = {}
@@ -454,6 +532,12 @@ printf 'tmux_exists=%s\\n' "$tmux_exists"
     if not claude_installed:
         reasons.append("claude CLI is not installed or not executable on the remote host")
 
+    blocker = None
+    if not reasons:
+        blocker = probe_interactive_blocker(record, runner)
+        if blocker:
+            reasons.append(f"claude is blocked: {blocker[1]}")
+
     return ReadinessStatus(
         ready=not reasons,
         auth_mode=record.auth_mode,
@@ -465,6 +549,8 @@ printf 'tmux_exists=%s\\n' "$tmux_exists"
         configured_model=record.model,
         configured_profile=record.model_profile,
         reason="ok" if not reasons else "; ".join(reasons),
+        blocker_kind=blocker[0] if blocker else None,
+        blocker_reason=blocker[1] if blocker else None,
     )
 
 
@@ -531,6 +617,22 @@ tmux delete-buffer -b {q(buffer_name)} >/dev/null 2>&1 || true
     )
 
 
+def send_tmux_keys(record: SessionRecord, runner: RemoteRunner, *keys: str) -> None:
+    joined = " ".join(q(key) for key in keys)
+    script = f"""
+set -euo pipefail
+tmux has-session -t {q(record.tmux_session)} 2>/dev/null
+tmux send-keys -t {q(record.tmux_session)} {joined}
+"""
+    runner.ssh(
+        record.ssh_target,
+        script,
+        check=True,
+        control_path=record.control_path,
+        batch_mode=bool(record.control_path),
+    )
+
+
 def wait_for_quiet_output(
     record: SessionRecord,
     runner: RemoteRunner,
@@ -566,6 +668,191 @@ def wait_for_quiet_output(
         previous = current
 
     return previous
+
+
+def observe_session(
+    record: SessionRecord,
+    runner: RemoteRunner,
+    *,
+    lines: int,
+    settle_seconds: float,
+) -> ObserveStatus:
+    if record.status == "closed":
+        return ObserveStatus(
+            state="closed",
+            reason="session is closed",
+            likely_done=True,
+            has_error=False,
+            changed_during_sample=False,
+            control_master_active=True,
+            remote_status=RemoteStatus(
+                workspace_exists=False,
+                tmux_exists=False,
+                pane_command="",
+                claude_running=False,
+            ),
+        )
+
+    control_master_active = True
+    if record.auth_mode == "control_master":
+        control_master_active = bool(record.control_path) and runner.check_master(record.ssh_target, record.control_path)
+        if not control_master_active:
+            return ObserveStatus(
+                state="disconnected",
+                reason="control master is not active; run `remotecc connect <session>` first",
+                likely_done=False,
+                has_error=True,
+                changed_during_sample=False,
+                control_master_active=False,
+                remote_status=RemoteStatus(
+                    workspace_exists=False,
+                    tmux_exists=False,
+                    pane_command="",
+                    claude_running=False,
+                ),
+                error_reason="control master is not active",
+            )
+
+    remote_status = probe_remote_safe(record, runner)
+    tail = ""
+    if remote_status.tmux_exists:
+        try:
+            tail = trim_output_tail(capture_pane(record, runner, lines=lines), lines=lines)
+        except RemoteCommandError:
+            tail = ""
+    blocker = detect_interactive_blocker(tail)
+    error_reason = detect_recent_error(tail)
+    changed_during_sample = False
+
+    if settle_seconds > 0 and remote_status.claude_running and not blocker:
+        time.sleep(settle_seconds)
+        latest_tail = trim_output_tail(capture_pane(record, runner, lines=lines), lines=lines)
+        changed_during_sample = latest_tail != tail
+        tail = latest_tail
+        blocker = detect_interactive_blocker(tail)
+        error_reason = detect_recent_error(tail)
+
+    if not remote_status.workspace_exists:
+        return ObserveStatus(
+            state="missing_workspace",
+            reason="remote workspace is missing",
+            likely_done=False,
+            has_error=True,
+            changed_during_sample=changed_during_sample,
+            control_master_active=control_master_active,
+            remote_status=remote_status,
+            error_reason="remote workspace is missing",
+            tail=tail,
+        )
+    if not remote_status.tmux_exists:
+        return ObserveStatus(
+            state="missing_tmux",
+            reason="tmux session is missing on the remote host",
+            likely_done=False,
+            has_error=True,
+            changed_during_sample=changed_during_sample,
+            control_master_active=control_master_active,
+            remote_status=remote_status,
+            error_reason="tmux session is missing",
+            tail=tail,
+        )
+    if blocker:
+        return ObserveStatus(
+            state="blocked",
+            reason=blocker[1],
+            likely_done=False,
+            has_error=False,
+            changed_during_sample=changed_during_sample,
+            control_master_active=control_master_active,
+            remote_status=remote_status,
+            blocker_kind=blocker[0],
+            blocker_reason=blocker[1],
+            tail=tail,
+        )
+    if error_reason:
+        return ObserveStatus(
+            state="error",
+            reason=error_reason,
+            likely_done=True,
+            has_error=True,
+            changed_during_sample=changed_during_sample,
+            control_master_active=control_master_active,
+            remote_status=remote_status,
+            error_reason=error_reason,
+            tail=tail,
+        )
+    if remote_status.claude_running and changed_during_sample:
+        return ObserveStatus(
+            state="running",
+            reason="recent pane output is still changing",
+            likely_done=False,
+            has_error=False,
+            changed_during_sample=True,
+            control_master_active=control_master_active,
+            remote_status=remote_status,
+            tail=tail,
+        )
+    if remote_status.claude_running:
+        return ObserveStatus(
+            state="idle",
+            reason="no new output during the observation window; Claude is likely waiting for input or finished",
+            likely_done=True,
+            has_error=False,
+            changed_during_sample=False,
+            control_master_active=control_master_active,
+            remote_status=remote_status,
+            tail=tail,
+        )
+    return ObserveStatus(
+        state="stopped",
+        reason="Claude is not running in the tmux pane",
+        likely_done=True,
+        has_error=False,
+        changed_during_sample=False,
+        control_master_active=control_master_active,
+        remote_status=remote_status,
+        tail=tail,
+    )
+
+
+def approve_blocker(
+    record: SessionRecord,
+    runner: RemoteRunner,
+    *,
+    mode: str,
+) -> tuple[str, str]:
+    blocker = probe_interactive_blocker(record, runner)
+    if not blocker:
+        raise ValueError("no interactive blocker detected")
+
+    blocker_kind, blocker_reason = blocker
+    if blocker_kind == "workspace_trust":
+        send_tmux_keys(record, runner, "Enter")
+        return blocker
+    if blocker_kind in {"edit_approval", "bash_approval"}:
+        if mode == "session":
+            send_tmux_keys(record, runner, "BTab", "Enter")
+        else:
+            send_tmux_keys(record, runner, "Enter")
+        return blocker
+    raise ValueError(f"unsupported blocker: {blocker_reason}")
+
+
+def wait_for_blocker(
+    record: SessionRecord,
+    runner: RemoteRunner,
+    *,
+    timeout_seconds: int,
+    poll_interval: float,
+    lines: int,
+) -> tuple[str, str] | None:
+    started = time.monotonic()
+    while time.monotonic() - started < timeout_seconds:
+        blocker = probe_interactive_blocker(record, runner, lines=lines)
+        if blocker:
+            return blocker
+        time.sleep(poll_interval)
+    return None
 
 
 def maybe_switch_running_model(
@@ -616,7 +903,12 @@ def send_to_claude(record: SessionRecord, runner: RemoteRunner, prompt: str) -> 
     send_buffer(record, runner, prompt)
 
 
-def format_status(record: SessionRecord, remote_status: RemoteStatus) -> str:
+def format_status(
+    record: SessionRecord,
+    remote_status: RemoteStatus,
+    *,
+    blocker: tuple[str, str] | None = None,
+) -> str:
     return "\n".join(
         [
             f"session_id: {record.session_id}",
@@ -634,6 +926,8 @@ def format_status(record: SessionRecord, remote_status: RemoteStatus) -> str:
             f"tmux_exists: {'yes' if remote_status.tmux_exists else 'no'}",
             f"pane_command: {remote_status.pane_command or '-'}",
             f"claude_running: {'yes' if remote_status.claude_running else 'no'}",
+            f"blocker: {blocker[0] if blocker else '-'}",
+            f"blocker_reason: {blocker[1] if blocker else '-'}",
             f"last_push_at: {record.last_push_at or '-'}",
             f"last_pull_at: {record.last_pull_at or '-'}",
             f"last_seen_at: {record.last_seen_at or '-'}",
@@ -733,9 +1027,10 @@ def cmd_status(args: argparse.Namespace) -> int:
     runner = resolve_runner()
     record = store.get_session(args.session, include_closed=True)
     remote_status = probe_remote_safe(record, runner)
+    blocker = probe_interactive_blocker(record, runner, remote_status=remote_status)
     record.last_seen_at = utc_now()
     store.save_session(record)
-    print(format_status(record, remote_status))
+    print(format_status(record, remote_status, blocker=blocker))
     return 0
 
 
@@ -757,6 +1052,8 @@ def cmd_ready(args: argparse.Namespace) -> int:
         "configured_model": readiness.configured_model or "default",
         "configured_profile": readiness.configured_profile,
         "reason": readiness.reason,
+        "blocker_kind": readiness.blocker_kind,
+        "blocker_reason": readiness.blocker_reason,
     }
     if args.json:
         print(json.dumps(payload, ensure_ascii=False))
@@ -776,6 +1073,50 @@ def cmd_connect(args: argparse.Namespace) -> int:
     record.last_seen_at = utc_now()
     store.save_session(record)
     print(f"connected ssh control master for {record.name}")
+    return 0
+
+
+def cmd_approve(args: argparse.Namespace) -> int:
+    store = resolve_store()
+    runner = resolve_runner()
+    record = store.get_session(args.session, include_closed=True)
+    ensure_open_session(record, "approve")
+    try:
+        blocker = approve_blocker(record, runner, mode=args.mode)
+    except ValueError as exc:
+        if str(exc) != "no interactive blocker detected":
+            return fail(str(exc))
+        blocker = wait_for_blocker(
+            record,
+            runner,
+            timeout_seconds=args.detect_timeout,
+            poll_interval=args.poll_interval,
+            lines=args.lines,
+        )
+        if not blocker:
+            return fail(str(exc))
+        try:
+            blocker = approve_blocker(record, runner, mode=args.mode)
+        except ValueError as retry_exc:
+            return fail(str(retry_exc))
+
+    record.last_seen_at = utc_now()
+    store.save_session(record)
+    print(f"approved blocker: {blocker[0]}")
+    if args.wait:
+        final_capture = wait_for_quiet_output(
+            record,
+            runner,
+            timeout_seconds=args.timeout,
+            poll_interval=args.poll_interval,
+            lines=args.lines,
+        )
+        remaining = detect_interactive_blocker(final_capture)
+        if remaining:
+            print(f"still blocked: {remaining[1]}", file=sys.stderr)
+            return 2
+        if not final_capture.endswith("\n"):
+            print()
     return 0
 
 
@@ -890,6 +1231,13 @@ def cmd_send(args: argparse.Namespace) -> int:
             poll_interval=args.poll_interval,
             lines=args.lines,
         )
+        blocker = detect_interactive_blocker(final_capture)
+        if blocker:
+            print(
+                f"blocked: {blocker[1]}; approve it in the remote tmux session and retry",
+                file=sys.stderr,
+            )
+            return 2
         if not final_capture.endswith("\n"):
             print()
     else:
@@ -903,6 +1251,74 @@ def cmd_capture(args: argparse.Namespace) -> int:
     record = store.get_session(args.session, include_closed=True)
     print(capture_pane(record, runner, lines=args.lines), end="")
     return 0
+
+
+def print_observe_status(record: SessionRecord, observe: ObserveStatus, *, json_mode: bool) -> None:
+    payload = {
+        "session_id": record.session_id,
+        "name": record.name,
+        "status": record.status,
+        "state": observe.state,
+        "reason": observe.reason,
+        "likely_done": observe.likely_done,
+        "has_error": observe.has_error,
+        "changed_during_sample": observe.changed_during_sample,
+        "auth_mode": record.auth_mode,
+        "control_master_active": observe.control_master_active,
+        "configured_model": configured_model_label(record),
+        "configured_profile": record.model_profile,
+        "workspace_exists": observe.remote_status.workspace_exists,
+        "tmux_exists": observe.remote_status.tmux_exists,
+        "claude_running": observe.remote_status.claude_running,
+        "pane_command": observe.remote_status.pane_command or None,
+        "blocker_kind": observe.blocker_kind,
+        "blocker_reason": observe.blocker_reason,
+        "error_reason": observe.error_reason,
+        "tail": observe.tail,
+    }
+    if json_mode:
+        print(json.dumps(payload, ensure_ascii=False))
+        return
+
+    for key, value in payload.items():
+        if key == "tail":
+            continue
+        print(f"{key}: {value}")
+    print("tail:")
+    if observe.tail:
+        print(observe.tail, end="" if observe.tail.endswith("\n") else "\n")
+    else:
+        print("-")
+
+
+def cmd_observe(args: argparse.Namespace) -> int:
+    store = resolve_store()
+    runner = resolve_runner()
+    record = store.get_session(args.session, include_closed=True)
+
+    previous_key = None
+    while True:
+        observe = observe_session(
+            record,
+            runner,
+            lines=args.lines,
+            settle_seconds=args.settle_seconds,
+        )
+        record.last_seen_at = utc_now()
+        store.save_session(record)
+
+        current_key = (observe.state, observe.reason, observe.tail)
+        if previous_key is None or current_key != previous_key or not args.follow:
+            print_observe_status(record, observe, json_mode=args.json)
+            previous_key = current_key
+
+        if not args.follow or observe.state != "running":
+            if observe.state == "blocked":
+                return 2
+            if observe.has_error:
+                return 1
+            return 0
+        time.sleep(args.poll_interval)
 
 
 def cmd_attach(args: argparse.Namespace) -> int:
@@ -1110,6 +1526,15 @@ def build_parser() -> argparse.ArgumentParser:
     status.add_argument("session")
     status.set_defaults(func=cmd_status)
 
+    observe = subparsers.add_parser("observe", help="tail-safe session observation for async runs")
+    observe.add_argument("session")
+    observe.add_argument("--json", action="store_true")
+    observe.add_argument("--follow", action="store_true", help="keep polling until the session is no longer running")
+    observe.add_argument("--lines", type=int, default=DEFAULT_OBSERVE_LINES)
+    observe.add_argument("--settle-seconds", type=float, default=1.5, help="short resample window used to decide whether output is still changing")
+    observe.add_argument("--poll-interval", type=float, default=2.0, help="delay between follow-mode observation rounds")
+    observe.set_defaults(func=cmd_observe)
+
     ready = subparsers.add_parser("ready", help="check whether a session is usable non-interactively by a skill")
     ready.add_argument("session")
     ready.add_argument("--json", action="store_true")
@@ -1118,6 +1543,16 @@ def build_parser() -> argparse.ArgumentParser:
     connect = subparsers.add_parser("connect", help="open or refresh the ssh control master for a password-auth session")
     connect.add_argument("session")
     connect.set_defaults(func=cmd_connect)
+
+    approve = subparsers.add_parser("approve", help="approve a detected Claude workspace-trust or tool/edit blocker")
+    approve.add_argument("session")
+    approve.add_argument("--mode", choices=["once", "session"], default="once")
+    approve.add_argument("--wait", action=argparse.BooleanOptionalAction, default=True)
+    approve.add_argument("--detect-timeout", type=int, default=8)
+    approve.add_argument("--timeout", type=int, default=45)
+    approve.add_argument("--poll-interval", type=float, default=1.2)
+    approve.add_argument("--lines", type=int, default=DEFAULT_CAPTURE_LINES)
+    approve.set_defaults(func=cmd_approve)
 
     set_model = subparsers.add_parser("set-model", help="persist or switch the configured Claude model for a session")
     set_model.add_argument("session")

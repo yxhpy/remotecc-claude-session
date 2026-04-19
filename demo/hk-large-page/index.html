@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Flux 2040 城市设计周</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;900&display=swap');
+    * { font-family: 'Poppins', sans-serif; }
+    html { scroll-behavior: smooth; }
+    body { background: linear-gradient(135deg, #0a0e1a 0%, #0f1428 50%, #1a0a2e 100%); overflow-x: hidden; }
+    .grid-bg { background-image: linear-gradient(0deg, transparent 24%, rgba(0,217,255,.05) 25%, rgba(0,217,255,.05) 26%, transparent 27%, transparent 74%, rgba(0,217,255,.05) 75%, rgba(0,217,255,.05) 76%, transparent 77%), linear-gradient(90deg, transparent 24%, rgba(0,217,255,.05) 25%, rgba(0,217,255,.05) 26%, transparent 27%, transparent 74%, rgba(0,217,255,.05) 75%, rgba(0,217,255,.05) 76%, transparent 77%); background-size: 100px 100px; }
+    .glow { box-shadow: 0 0 40px rgba(0,217,255,.3), 0 0 80px rgba(0,217,255,.1); }
+    .glow-orange { box-shadow: 0 0 40px rgba(255,140,0,.3), 0 0 80px rgba(255,140,0,.1); }
+    .btn-gradient { background: linear-gradient(135deg, #00d9ff 0%, #ff8c00 100%); transition: transform .3s, box-shadow .3s; }
+    .btn-gradient:hover { transform: translateY(-2px); box-shadow: 0 0 30px rgba(0,217,255,.4), 0 0 60px rgba(255,140,0,.2); }
+    .counter { font-size: 3rem; font-weight: 900; background: linear-gradient(135deg, #00d9ff, #ff8c00); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .nav-link { position: relative; transition: color .3s; }
+    .nav-link.active { color: #00d9ff; }
+    .nav-link.active::after { content: ''; position: absolute; bottom: -4px; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, #00d9ff, transparent); }
+    .tab-btn { padding: 12px 24px; border-bottom: 2px solid transparent; transition: all .3s; color: #999; }
+    .tab-btn.active { color: #00d9ff; border-bottom-color: #00d9ff; }
+    .faq-item { border-top: 1px solid rgba(0,217,255,.2); transition: all .3s; }
+    .faq-item.active { background: rgba(0,217,255,.05); }
+    .faq-header { cursor: pointer; user-select: none; }
+    .faq-arrow { transition: transform .3s; display: inline-block; }
+    .faq-item.active .faq-arrow { transform: rotate(180deg); }
+    .hero-halo { pointer-events: none; opacity: .65; transition: transform .18s ease-out, opacity .35s ease-out; }
+    .hero-signal-card { background: linear-gradient(180deg, rgba(8,12,24,.92), rgba(9,17,33,.58)); backdrop-filter: blur(16px); }
+    .schedule-meta { background: linear-gradient(135deg, rgba(0,217,255,.08), rgba(255,140,0,.1)); }
+    @media (max-width: 768px) { .counter { font-size: 2rem; } .hero-title { font-size: 2.5rem; } }
+  </style>
+</head>
+<body class="grid-bg text-gray-100">
+  <!-- 固定导航 -->
+  <nav class="fixed top-0 left-0 right-0 z-50 bg-gradient-to-b from-black to-transparent backdrop-blur-md border-b border-cyan-400 border-opacity-20">
+    <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <div class="w-10 h-10 bg-gradient-to-br from-cyan-400 to-orange-500 rounded-lg flex items-center justify-center text-black font-bold">F</div>
+        <span class="text-xl font-bold text-cyan-400 hidden sm:inline">Flux 2040</span>
+      </div>
+      <div class="hidden md:flex gap-8">
+        <a href="#highlights" class="nav-link">亮点</a>
+        <a href="#schedule" class="nav-link">议程</a>
+        <a href="#speakers" class="nav-link">嘉宾</a>
+        <a href="#experience" class="nav-link">装置</a>
+        <a href="#tickets" class="nav-link">票种</a>
+        <a href="#faq" class="nav-link">FAQ</a>
+      </div>
+      <button id="mobileMenuBtn" class="md:hidden text-cyan-400 text-2xl">☰</button>
+    </div>
+    <div id="mobileMenu" class="hidden md:hidden bg-gradient-to-b from-black to-transparent border-t border-cyan-400 border-opacity-20">
+      <div class="px-4 py-4 space-y-3">
+        <a href="#highlights" class="block nav-link text-sm">亮点</a>
+        <a href="#schedule" class="block nav-link text-sm">议程</a>
+        <a href="#speakers" class="block nav-link text-sm">嘉宾</a>
+        <a href="#experience" class="block nav-link text-sm">装置</a>
+        <a href="#tickets" class="block nav-link text-sm">票种</a>
+        <a href="#faq" class="block nav-link text-sm">FAQ</a>
+        <button class="w-full btn-gradient text-black font-bold py-2 rounded text-sm mt-2">立即购票</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero 部分 -->
+  <section class="hero-stage relative h-screen flex items-center justify-center overflow-hidden pt-20">
+    <div class="absolute inset-0 overflow-hidden">
+      <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-cyan-400 opacity-5 rounded-full blur-3xl animate-pulse"></div>
+      <div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-orange-500 opacity-5 rounded-full blur-3xl animate-pulse" style="animation-delay: 1s"></div>
+      <div id="heroHalo" class="hero-halo hidden md:block absolute left-1/2 top-1/2 w-[28rem] h-[28rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,rgba(0,217,255,.2)_0%,rgba(255,140,0,.12)_35%,rgba(10,14,26,0)_72%)] blur-3xl"></div>
+    </div>
+    <div class="relative z-10 text-center px-4 max-w-5xl">
+      <div class="mb-6"><span class="inline-block text-cyan-400 text-sm font-bold tracking-widest">✨ 未来城市设计大会</span></div>
+      <h1 class="hero-title text-5xl sm:text-7xl font-black mb-8 leading-tight">
+        Flux 2040<br>
+        <span class="bg-gradient-to-r from-cyan-400 via-orange-500 to-cyan-400 bg-clip-text text-transparent">城市设计周</span>
+      </h1>
+      <p class="text-lg sm:text-2xl text-gray-300 mb-12 max-w-2xl mx-auto leading-relaxed">
+        探索未来城市形态，汇聚全球顶尖设计师、建筑师与创意先锋。通过沉浸式装置、跨界对话与创意工坊，重新定义城市的可能性。
+      </p>
+      <div class="flex flex-col sm:flex-row gap-4 justify-center mb-12">
+        <button class="btn-gradient text-black font-bold py-3 px-8 rounded-lg text-lg">立即购票</button>
+        <button class="border-2 border-cyan-400 text-cyan-400 font-bold py-3 px-8 rounded-lg text-lg hover:bg-cyan-400 hover:bg-opacity-10 transition">了解更多</button>
+      </div>
+      <div class="text-sm text-gray-400">2024年11月15-17日 • 深圳福田设计中心</div>
+      <div class="grid gap-3 sm:grid-cols-4 text-left mt-10 max-w-4xl mx-auto">
+        <div class="hero-signal-card rounded-2xl border border-cyan-400 border-opacity-20 p-4">
+          <p class="text-[11px] tracking-[0.28em] text-cyan-400 uppercase mb-2">When</p>
+          <p class="text-lg font-semibold">11.15 - 11.17</p>
+          <p class="text-sm text-gray-400 mt-1">72 小时未来城市实验场</p>
+        </div>
+        <div class="hero-signal-card rounded-2xl border border-orange-500 border-opacity-20 p-4">
+          <p class="text-[11px] tracking-[0.28em] text-orange-500 uppercase mb-2">Where</p>
+          <p class="text-lg font-semibold">深圳福田设计中心</p>
+          <p class="text-sm text-gray-400 mt-1">主展厅 + 中央广场 + 户外装置带</p>
+        </div>
+        <div class="hero-signal-card rounded-2xl border border-cyan-400 border-opacity-20 p-4">
+          <p class="text-[11px] tracking-[0.28em] text-cyan-400 uppercase mb-2">Live Mix</p>
+          <p class="text-lg font-semibold">150+ 嘉宾 / 8 个装置</p>
+          <p class="text-sm text-gray-400 mt-1">论坛、工坊、竞赛、资本连接同步展开</p>
+        </div>
+        <div class="hero-signal-card rounded-2xl border border-orange-500 border-opacity-20 p-4">
+          <p class="text-[11px] tracking-[0.28em] text-orange-500 uppercase mb-2">Alert</p>
+          <p class="text-lg font-semibold">早鸟票剩余 10 天</p>
+          <p class="text-sm text-gray-400 mt-1">当前报名城市热度：深圳 / 上海 / 新加坡</p>
+        </div>
+      </div>
+    </div>
+    <div class="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce text-cyan-400 text-3xl">↓</div>
+  </section>
+
+  <!-- 活动亮点 -->
+  <section id="highlights" class="py-20 relative">
+    <div class="max-w-7xl mx-auto px-4">
+      <div class="text-center mb-16">
+        <h2 class="text-4xl sm:text-5xl font-black mb-4"><span class="text-cyan-400">活动</span>亮点</h2>
+        <div class="w-20 h-1 bg-gradient-to-r from-cyan-400 to-orange-500 mx-auto"></div>
+      </div>
+      <div class="grid md:grid-cols-3 gap-6">
+        <div class="p-6 rounded-xl border border-cyan-400 border-opacity-30 hover:border-opacity-100 transition group">
+          <div class="text-4xl mb-4">🏛️</div>
+          <h3 class="text-xl font-bold mb-3">150+ 设计师齐聚</h3>
+          <p class="text-gray-400">来自全球30个国家的顶级设计师、建筑师与创意人士共同参展。</p>
+        </div>
+        <div class="p-6 rounded-xl border border-orange-500 border-opacity-30 hover:border-opacity-100 transition group">
+          <div class="text-4xl mb-4">🎨</div>
+          <h3 class="text-xl font-bold mb-3">8场沉浸式装置</h3>
+          <p class="text-gray-400">融合AR、投影、互动装置的创意展览，打造未来城市体验。</p>
+        </div>
+        <div class="p-6 rounded-xl border border-cyan-400 border-opacity-30 hover:border-opacity-100 transition group">
+          <div class="text-4xl mb-4">🎭</div>
+          <h3 class="text-xl font-bold mb-3">20场主题论坛</h3>
+          <p class="text-gray-400">城市规划、建筑设计、社区营造、数字创意等多维度深度对话。</p>
+        </div>
+        <div class="p-6 rounded-xl border border-orange-500 border-opacity-30 hover:border-opacity-100 transition group">
+          <div class="text-4xl mb-4">💡</div>
+          <h3 class="text-xl font-bold mb-3">创意工坊实践</h3>
+          <p class="text-gray-400">动手设计工坊、快速原型制作、AI创意工具应用，零距离学习。</p>
+        </div>
+        <div class="p-6 rounded-xl border border-cyan-400 border-opacity-30 hover:border-opacity-100 transition group">
+          <div class="text-4xl mb-4">🌍</div>
+          <h3 class="text-xl font-bold mb-3">全球创意竞赛</h3>
+          <p class="text-gray-400">参赛作品展示与颁奖，赢取50万元创意基金与国际展览机会。</p>
+        </div>
+        <div class="p-6 rounded-xl border border-orange-500 border-opacity-30 hover:border-opacity-100 transition group">
+          <div class="text-4xl mb-4">🤝</div>
+          <h3 class="text-xl font-bold mb-3">资本对接会</h3>
+          <p class="text-gray-400">与创意基金、风投机构直接对话，寻找创新项目融资机会。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 三日议程 -->
+  <section id="schedule" class="py-20 relative">
+    <div class="max-w-7xl mx-auto px-4">
+      <div class="text-center mb-16">
+        <h2 class="text-4xl sm:text-5xl font-black mb-4"><span class="text-orange-500">三日</span>议程</h2>
+        <div class="w-20 h-1 bg-gradient-to-r from-orange-500 to-cyan-400 mx-auto"></div>
+      </div>
+      <div class="flex gap-2 border-b border-cyan-400 border-opacity-30 mb-8 overflow-x-auto">
+        <button class="tab-btn active" data-tab="day1" data-label="DAY 01 / 城市感知" data-summary="主旨演讲、参数化工坊、数字孪生论坛与首夜装置开放，节奏偏开幕与世界观建立。">第一天 (11月15日)</button>
+        <button class="tab-btn" data-tab="day2" data-label="DAY 02 / 社区与系统" data-summary="AI 设计、竞赛评选、可持续论坛与资本对接集中发生，节奏最密、信息量最大。">第二天 (11月16日)</button>
+        <button class="tab-btn" data-tab="day3" data-label="DAY 03 / 人才与闭幕" data-summary="社区实践、教育论坛、颁奖与酒会收束整场活动，更强调连接与成果展示。">第三天 (11月17日)</button>
+      </div>
+      <div class="schedule-meta mb-8 rounded-2xl border border-cyan-400 border-opacity-20 px-5 py-4 sm:px-6 sm:py-5 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p id="scheduleLabel" class="text-xs tracking-[0.32em] text-cyan-400 uppercase mb-2">DAY 01 / 城市感知</p>
+          <p id="scheduleSummary" class="text-sm sm:text-base text-gray-300 max-w-3xl">主旨演讲、参数化工坊、数字孪生论坛与首夜装置开放，节奏偏开幕与世界观建立。</p>
+        </div>
+        <div class="text-left sm:text-right">
+          <p class="text-[11px] tracking-[0.28em] text-gray-500 uppercase">Curated Flow</p>
+          <p class="text-sm text-orange-500 font-semibold mt-1">论坛 20 场 / 工坊 3 条 / 资本对接 1 条主线</p>
+        </div>
+      </div>
+      <div id="day1" class="tab-content space-y-4">
+        <div class="flex flex-col sm:flex-row gap-4 p-4 border-l-4 border-cyan-400 hover:bg-cyan-400 hover:bg-opacity-5 transition">
+          <div class="min-w-max text-cyan-400 font-bold">09:00 - 10:00</div>
+          <div><h4 class="font-bold text-lg mb-1">开幕式与主旨演讲</h4><p class="text-gray-400">全球设计趋势展望与2040城市未来愿景分享</p></div>
+        </div>
+        <div class="flex flex-col sm:flex-row gap-4 p-4 border-l-4 border-orange-500 hover:bg-orange-500 hover:bg-opacity-5 transition">
+          <div class="min-w-max text-orange-500 font-bold">10:30 - 12:30</div>
+          <div><h4 class="font-bold text-lg mb-1">创意工坊 A - 参数化设计基础</h4><p class="text-gray-400">学习Grasshopper在建筑设计中的应用，限30人，需提前报名</p></div>
+        </div>
+        <div class="flex flex-col sm:flex-row gap-4 p-4 border-l-4 border-cyan-400 hover:bg-cyan-400 hover:bg-opacity-5 transition">
+          <div class="min-w-max text-cyan-400 font-bold">13:30 - 15:00</div>
+          <div><h4 class="font-bold text-lg mb-1">论坛：智慧城市与数字孪生</h4><p class="text-gray-400">邀请3位全球顶级建筑师与城市规划者对谈</p></div>
+        </div>
+        <div class="flex flex-col sm:flex-row gap-4 p-4 border-l-4 border-orange-500 hover:bg-orange-500 hover:bg-opacity-5 transition">
+          <div class="min-w-max text-orange-500 font-bold">16:00 - 18:00</div>
+          <div><h4 class="font-bold text-lg mb-1">装置展览开放 & 快乐时光</h4><p class="text-gray-400">首日4件沉浸式装置正式亮相，现场音乐与小食招待</p></div>
+        </div>
+      </div>
+      <div id="day2" class="tab-content hidden space-y-4">
+        <div class="flex flex-col sm:flex-row gap-4 p-4 border-l-4 border-cyan-400 hover:bg-cyan-400 hover:bg-opacity-5 transition">
+          <div class="min-w-max text-cyan-400 font-bold">09:00 - 11:00</div>
+          <div><h4 class="font-bold text-lg mb-1">创意工坊 B - AI设计工具体验</h4><p class="text-gray-400">Midjourney、ChatGPT在创意设计流程中的实践应用</p></div>
+        </div>
+        <div class="flex flex-col sm:flex-row gap-4 p-4 border-l-4 border-orange-500 hover:bg-orange-500 hover:bg-opacity-5 transition">
+          <div class="min-w-max text-orange-500 font-bold">11:30 - 12:30</div>
+          <div><h4 class="font-bold text-lg mb-1">年度创意竞赛·评选与展示</h4><p class="text-gray-400">全球征集作品路演，评委点评与实时投票</p></div>
+        </div>
+        <div class="flex flex-col sm:flex-row gap-4 p-4 border-l-4 border-cyan-400 hover:bg-cyan-400 hover:bg-opacity-5 transition">
+          <div class="min-w-max text-cyan-400 font-bold">13:30 - 15:30</div>
+          <div><h4 class="font-bold text-lg mb-1">论坛：可持续设计与社区营造</h4><p class="text-gray-400">如何通过设计促进城市社区的包容性发展</p></div>
+        </div>
+        <div class="flex flex-col sm:flex-row gap-4 p-4 border-l-4 border-orange-500 hover:bg-orange-500 hover:bg-opacity-5 transition">
+          <div class="min-w-max text-orange-500 font-bold">16:00 - 18:00</div>
+          <div><h4 class="font-bold text-lg mb-1">资本对接会 & 设计师沙龙</h4><p class="text-gray-400">与创意基金、投资机构一对一交流创意项目融资</p></div>
+        </div>
+      </div>
+      <div id="day3" class="tab-content hidden space-y-4">
+        <div class="flex flex-col sm:flex-row gap-4 p-4 border-l-4 border-cyan-400 hover:bg-cyan-400 hover:bg-opacity-5 transition">
+          <div class="min-w-max text-cyan-400 font-bold">09:00 - 11:00</div>
+          <div><h4 class="font-bold text-lg mb-1">创意工坊 C - 社区设计实践</h4><p class="text-gray-400">如何将设计转化为真实社区改造项目</p></div>
+        </div>
+        <div class="flex flex-col sm:flex-row gap-4 p-4 border-l-4 border-orange-500 hover:bg-orange-500 hover:bg-opacity-5 transition">
+          <div class="min-w-max text-orange-500 font-bold">11:30 - 12:30</div>
+          <div><h4 class="font-bold text-lg mb-1">论坛：设计教育与未来人才</h4><p class="text-gray-400">全球设计院校与产业对话，培养2040时代的创意人才</p></div>
+        </div>
+        <div class="flex flex-col sm:flex-row gap-4 p-4 border-l-4 border-cyan-400 hover:bg-cyan-400 hover:bg-opacity-5 transition">
+          <div class="min-w-max text-cyan-400 font-bold">13:00 - 14:30</div>
+          <div><h4 class="font-bold text-lg mb-1">颁奖典礼</h4><p class="text-gray-400">全球创意竞赛最终奖项公布，50万元创意基金颁发</p></div>
+        </div>
+        <div class="flex flex-col sm:flex-row gap-4 p-4 border-l-4 border-orange-500 hover:bg-orange-500 hover:bg-opacity-5 transition">
+          <div class="min-w-max text-orange-500 font-bold">15:00 - 18:00</div>
+          <div><h4 class="font-bold text-lg mb-1">闭幕式与告别酒会</h4><p class="text-gray-400">最后一次装置展览与全球创意人士的网络社交时刻</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 嘉宾阵容 -->
+  <section id="speakers" class="py-20 relative">
+    <div class="max-w-7xl mx-auto px-4">
+      <div class="text-center mb-16">
+        <h2 class="text-4xl sm:text-5xl font-black mb-4">国际<span class="text-cyan-400">嘉宾</span></h2>
+        <p class="text-gray-400 text-lg">云集全球顶级设计思想家</p>
+        <div class="w-20 h-1 bg-gradient-to-r from-cyan-400 to-orange-500 mx-auto mt-4"></div>
+      </div>
+      <div class="grid md:grid-cols-4 gap-6">
+        <div class="rounded-xl overflow-hidden border border-cyan-400 border-opacity-30 hover:border-opacity-100 transition"><div class="aspect-square bg-gradient-to-br from-cyan-400 to-orange-500 opacity-20"></div><div class="p-4"><h4 class="font-bold text-lg text-cyan-400">张寻宇</h4><p class="text-sm text-orange-500 mb-2">全球建筑设计大师</p><p class="text-xs text-gray-400">2届普利兹克奖得主，代表作《云中城市》获全球建筑奖</p></div></div>
+        <div class="rounded-xl overflow-hidden border border-orange-500 border-opacity-30 hover:border-opacity-100 transition"><div class="aspect-square bg-gradient-to-br from-orange-500 to-cyan-400 opacity-20"></div><div class="p-4"><h4 class="font-bold text-lg text-orange-500">Emma Chen</h4><p class="text-sm text-cyan-400 mb-2">交互设计先锋</p><p class="text-xs text-gray-400">MIT Media Lab负责人，AI与设计融合的探索者</p></div></div>
+        <div class="rounded-xl overflow-hidden border border-cyan-400 border-opacity-30 hover:border-opacity-100 transition"><div class="aspect-square bg-gradient-to-br from-cyan-400 to-orange-500 opacity-20"></div><div class="p-4"><h4 class="font-bold text-lg text-cyan-400">Alejandro Rodriguez</h4><p class="text-sm text-orange-500 mb-2">城市规划专家</p><p class="text-xs text-gray-400">曾领导8个全球顶级城市更新项目，可持续发展设计倡导者</p></div></div>
+        <div class="rounded-xl overflow-hidden border border-orange-500 border-opacity-30 hover:border-opacity-100 transition"><div class="aspect-square bg-gradient-to-br from-orange-500 to-cyan-400 opacity-20"></div><div class="p-4"><h4 class="font-bold text-lg text-orange-500">李明晓</h4><p class="text-sm text-cyan-400 mb-2">数字艺术创意人</p><p class="text-xs text-gray-400">获得威尼斯双年展金奖，沉浸式艺术装置开创者</p></div></div>
+        <div class="rounded-xl overflow-hidden border border-cyan-400 border-opacity-30 hover:border-opacity-100 transition"><div class="aspect-square bg-gradient-to-br from-cyan-400 to-orange-500 opacity-20"></div><div class="p-4"><h4 class="font-bold text-lg text-cyan-400">Yuki Tanaka</h4><p class="text-sm text-orange-500 mb-2">工业设计大咖</p><p class="text-xs text-gray-400">红点奖获得者，品牌与产品创新的战略顾问</p></div></div>
+        <div class="rounded-xl overflow-hidden border border-orange-500 border-opacity-30 hover:border-opacity-100 transition"><div class="aspect-square bg-gradient-to-br from-orange-500 to-cyan-400 opacity-20"></div><div class="p-4"><h4 class="font-bold text-lg text-orange-500">王子怡</h4><p class="text-sm text-cyan-400 mb-2">社区营造推动者</p><p class="text-xs text-gray-400">致力于用设计赋能边缘社区，获联合国人居署特别表彰</p></div></div>
+        <div class="rounded-xl overflow-hidden border border-cyan-400 border-opacity-30 hover:border-opacity-100 transition"><div class="aspect-square bg-gradient-to-br from-cyan-400 to-orange-500 opacity-20"></div><div class="p-4"><h4 class="font-bold text-lg text-cyan-400">Marcus Chen</h4><p class="text-sm text-orange-500 mb-2">创新创业导师</p><p class="text-xs text-gray-400">已投资200+创意初创，致力于创意项目商业化</p></div></div>
+        <div class="rounded-xl overflow-hidden border border-orange-500 border-opacity-30 hover:border-opacity-100 transition"><div class="aspect-square bg-gradient-to-br from-orange-500 to-cyan-400 opacity-20"></div><div class="p-4"><h4 class="font-bold text-lg text-orange-500">Sophia Kumar</h4><p class="text-sm text-cyan-400 mb-2">气候与设计倡导者</p><p class="text-xs text-gray-400">UN气候变化框架下的设计顾问，碳中和城市设计专家</p></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 装置体验 -->
+  <section id="experience" class="py-20 relative">
+    <div class="max-w-7xl mx-auto px-4">
+      <div class="text-center mb-16">
+        <h2 class="text-4xl sm:text-5xl font-black mb-4">沉浸式<span class="text-orange-500">装置体验</span></h2>
+        <p class="text-gray-400 text-lg">8件融合艺术与科技的创意装置</p>
+        <div class="w-20 h-1 bg-gradient-to-r from-orange-500 to-cyan-400 mx-auto mt-4"></div>
+      </div>
+      <div class="grid md:grid-cols-2 gap-8">
+        <div class="relative rounded-xl overflow-hidden border border-cyan-400 border-opacity-50 hover:border-opacity-100 transition">
+          <div class="aspect-video bg-gradient-to-br from-cyan-400 to-black opacity-30"></div>
+          <div class="absolute inset-0 flex items-end"><div class="w-full p-6 bg-gradient-to-t from-black to-transparent"><h3 class="text-xl font-bold text-cyan-400 mb-2">流动之光</h3><p class="text-gray-300 text-sm mb-2">互动投影装置 | 位置：主展厅</p><p class="text-gray-400 text-xs">游客通过肢体动作控制光线流动，创作实时视觉艺术</p></div></div>
+        </div>
+        <div class="relative rounded-xl overflow-hidden border border-orange-500 border-opacity-50 hover:border-opacity-100 transition">
+          <div class="aspect-video bg-gradient-to-br from-orange-500 to-black opacity-30"></div>
+          <div class="absolute inset-0 flex items-end"><div class="w-full p-6 bg-gradient-to-t from-black to-transparent"><h3 class="text-xl font-bold text-orange-500 mb-2">城市呼吸</h3><p class="text-gray-300 text-sm mb-2">声音响应装置 | 位置：中央广场</p><p class="text-gray-400 text-xs">装置随着观众的声音呼吸、律动，诠释城市与人的互动</p></div></div>
+        </div>
+        <div class="relative rounded-xl overflow-hidden border border-cyan-400 border-opacity-50 hover:border-opacity-100 transition">
+          <div class="aspect-video bg-gradient-to-br from-cyan-400 to-black opacity-30"></div>
+          <div class="absolute inset-0 flex items-end"><div class="w-full p-6 bg-gradient-to-t from-black to-transparent"><h3 class="text-xl font-bold text-cyan-400 mb-2">未来地图</h3><p class="text-gray-300 text-sm mb-2">AR互动装置 | 位置：展厅B</p><p class="text-gray-400 text-xs">通过AR眼镜或手机，看到深圳2040年的设计想象</p></div></div>
+        </div>
+        <div class="relative rounded-xl overflow-hidden border border-orange-500 border-opacity-50 hover:border-opacity-100 transition">
+          <div class="aspect-video bg-gradient-to-br from-orange-500 to-black opacity-30"></div>
+          <div class="absolute inset-0 flex items-end"><div class="w-full p-6 bg-gradient-to-t from-black to-transparent"><h3 class="text-xl font-bold text-orange-500 mb-2">数字花园</h3><p class="text-gray-300 text-sm mb-2">生态互动装置 | 位置：户外区域</p><p class="text-gray-400 text-xs">AI驱动的动态花园，植物随观众互动而变化生长</p></div></div>
+        </div>
+        <div class="relative rounded-xl overflow-hidden border border-cyan-400 border-opacity-50 hover:border-opacity-100 transition">
+          <div class="aspect-video bg-gradient-to-br from-cyan-400 to-black opacity-30"></div>
+          <div class="absolute inset-0 flex items-end"><div class="w-full p-6 bg-gradient-to-t from-black to-transparent"><h3 class="text-xl font-bold text-cyan-400 mb-2">时间走廊</h3><p class="text-gray-300 text-sm mb-2">沉浸式走廊 | 位置：展厅C</p><p class="text-gray-400 text-xs">360度视觉装置展现城市的过去、现在、未来演进</p></div></div>
+        </div>
+        <div class="relative rounded-xl overflow-hidden border border-orange-500 border-opacity-50 hover:border-opacity-100 transition">
+          <div class="aspect-video bg-gradient-to-br from-orange-500 to-black opacity-30"></div>
+          <div class="absolute inset-0 flex items-end"><div class="w-full p-6 bg-gradient-to-t from-black to-transparent"><h3 class="text-xl font-bold text-orange-500 mb-2">碎片拼装</h3><p class="text-gray-300 text-sm mb-2">众创互动装置 | 位置：创意区</p><p class="text-gray-400 text-xs">观众可贡献设计碎片，共同建构未来城市的虚拟模型</p></div></div>
+        </div>
+        <div class="relative rounded-xl overflow-hidden border border-cyan-400 border-opacity-50 hover:border-opacity-100 transition">
+          <div class="aspect-video bg-gradient-to-br from-cyan-400 to-black opacity-30"></div>
+          <div class="absolute inset-0 flex items-end"><div class="w-full p-6 bg-gradient-to-t from-black to-transparent"><h3 class="text-xl font-bold text-cyan-400 mb-2">声音之塔</h3><p class="text-gray-300 text-sm mb-2">音乐互动装置 | 位置：南侧广场</p><p class="text-gray-400 text-xs">12个互动柱子，每个代表一种城市声音主题</p></div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 票种对比 -->
+  <section id="tickets" class="py-20 relative">
+    <div class="max-w-7xl mx-auto px-4">
+      <div class="text-center mb-16">
+        <h2 class="text-4xl sm:text-5xl font-black mb-4">选择你的<span class="text-cyan-400">体验</span></h2>
+        <p class="text-gray-400 text-lg">3个递进式票种，满足不同需求</p>
+        <div class="w-20 h-1 bg-gradient-to-r from-cyan-400 to-orange-500 mx-auto mt-4"></div>
+      </div>
+      <div class="grid md:grid-cols-3 gap-6">
+        <div class="p-8 rounded-xl border border-cyan-400 border-opacity-50 hover:border-opacity-100 transition">
+          <div class="text-center mb-6">
+            <h3 class="text-2xl font-bold text-cyan-400 mb-2">观展门票</h3>
+            <div class="text-4xl font-black mb-2">¥99</div>
+            <p class="text-gray-400 text-sm">单日票</p>
+          </div>
+          <div class="space-y-3 mb-6">
+            <div class="flex items-center gap-2"><span class="text-cyan-400">✓</span> 全天展览参观权</div>
+            <div class="flex items-center gap-2"><span class="text-cyan-400">✓</span> 8件沉浸式装置体验</div>
+            <div class="flex items-center gap-2"><span class="text-cyan-400">✓</span> 免费现场展览导览</div>
+            <div class="flex items-center gap-2 opacity-50"><span>✗</span> 论坛与工坊参与</div>
+            <div class="flex items-center gap-2 opacity-50"><span>✗</span> 嘉宾午餐与酒会</div>
+          </div>
+          <button class="w-full border-2 border-cyan-400 text-cyan-400 font-bold py-2 rounded-lg hover:bg-cyan-400 hover:bg-opacity-10 transition">选择此票</button>
+        </div>
+        <div class="p-8 rounded-xl border-2 border-orange-500 hover:border-opacity-100 transition relative md:scale-105 md:z-10">
+          <div class="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-orange-500 to-cyan-400 px-4 py-1 rounded-full text-sm font-bold text-black">最热销</div>
+          <div class="text-center mb-6">
+            <h3 class="text-2xl font-bold text-orange-500 mb-2">参会门票</h3>
+            <div class="text-4xl font-black mb-2">¥298</div>
+            <p class="text-gray-400 text-sm">三日通票</p>
+          </div>
+          <div class="space-y-3 mb-6">
+            <div class="flex items-center gap-2"><span class="text-orange-500">✓</span> 三日展览全天参观</div>
+            <div class="flex items-center gap-2"><span class="text-orange-500">✓</span> 全部论坛（20场）</div>
+            <div class="flex items-center gap-2"><span class="text-orange-500">✓</span> 3场创意工坊选选参加</div>
+            <div class="flex items-center gap-2"><span class="text-orange-500">✓</span> 每日嘉宾午餐</div>
+            <div class="flex items-center gap-2 opacity-50"><span>✗</span> 资本对接会专享权</div>
+          </div>
+          <button class="w-full btn-gradient text-black font-bold py-2 rounded-lg">选择此票</button>
+        </div>
+        <div class="p-8 rounded-xl border border-cyan-400 border-opacity-50 hover:border-opacity-100 transition">
+          <div class="text-center mb-6">
+            <h3 class="text-2xl font-bold text-cyan-400 mb-2">创意精英票</h3>
+            <div class="text-4xl font-black mb-2">¥988</div>
+            <p class="text-gray-400 text-sm">限100人</p>
+          </div>
+          <div class="space-y-3 mb-6">
+            <div class="flex items-center gap-2"><span class="text-cyan-400">✓</span> 三日展览VIP通票</div>
+            <div class="flex items-center gap-2"><span class="text-cyan-400">✓</span> 所有论坛与工坊优先席位</div>
+            <div class="flex items-center gap-2"><span class="text-cyan-400">✓</span> 资本对接会专享权</div>
+            <div class="flex items-center gap-2"><span class="text-cyan-400">✓</span> 每日VIP午宴与闭门沙龙</div>
+            <div class="flex items-center gap-2"><span class="text-cyan-400">✓</span> 1v1嘉宾交流名额</div>
+          </div>
+          <button class="w-full border-2 border-cyan-400 text-cyan-400 font-bold py-2 rounded-lg hover:bg-cyan-400 hover:bg-opacity-10 transition">选择此票</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 数据统计 -->
+  <section class="py-20 relative">
+    <div class="max-w-7xl mx-auto px-4">
+      <div class="text-center mb-16">
+        <h2 class="text-4xl sm:text-5xl font-black mb-4">Flux <span class="text-orange-500">2040</span> 影响力</h2>
+        <div class="w-20 h-1 bg-gradient-to-r from-orange-500 to-cyan-400 mx-auto"></div>
+      </div>
+      <div class="grid md:grid-cols-4 gap-8">
+        <div class="text-center p-8 rounded-xl border border-cyan-400 border-opacity-30 hover:border-opacity-100 transition">
+          <div class="counter" data-target="150">0</div>
+          <p class="text-lg text-gray-400 mt-4">国际顶级设计师</p>
+        </div>
+        <div class="text-center p-8 rounded-xl border border-orange-500 border-opacity-30 hover:border-opacity-100 transition">
+          <div class="counter" data-target="8">0</div>
+          <p class="text-lg text-gray-400 mt-4">沉浸式装置</p>
+        </div>
+        <div class="text-center p-8 rounded-xl border border-cyan-400 border-opacity-30 hover:border-opacity-100 transition">
+          <div class="counter" data-target="20">0</div>
+          <p class="text-lg text-gray-400 mt-4">主题论坛</p>
+        </div>
+        <div class="text-center p-8 rounded-xl border border-orange-500 border-opacity-30 hover:border-opacity-100 transition">
+          <div class="counter" data-target="30">0</div>
+          <p class="text-lg text-gray-400 mt-4">参展国家</p>
+        </div>
+      </div>
+      <div class="mt-12 text-center">
+        <p class="text-gray-400 text-lg mb-4">历届活动创意竞赛奖励总额：<span class="text-orange-500 font-bold">¥200万+</span></p>
+        <p class="text-gray-400 text-lg">参会设计师平均融资额增长：<span class="text-cyan-400 font-bold">320%</span></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ 部分 -->
+  <section id="faq" class="py-20 relative">
+    <div class="max-w-4xl mx-auto px-4">
+      <div class="text-center mb-16">
+        <h2 class="text-4xl sm:text-5xl font-black mb-4">常见<span class="text-cyan-400">问题</span></h2>
+        <div class="w-20 h-1 bg-gradient-to-r from-cyan-400 to-orange-500 mx-auto"></div>
+      </div>
+      <div class="space-y-0">
+        <div class="faq-item"><div class="faq-header p-4 hover:bg-cyan-400 hover:bg-opacity-5"><div class="flex items-center justify-between"><h3 class="text-lg font-bold">票种是否可以转让或退款？</h3><span class="faq-arrow text-cyan-400">▼</span></div></div><div class="faq-content max-h-0 overflow-hidden transition-all duration-300"><div class="p-4 text-gray-400">支持票种转让，需在活动7天前办理。退款政策：活动15天前无损退款，7-15天前扣20%手续费，7天内不退。VIP精英票转让需补差价。</div></div></div>
+        <div class="faq-item"><div class="faq-header p-4 hover:bg-cyan-400 hover:bg-opacity-5"><div class="flex items-center justify-between"><h3 class="text-lg font-bold">如何报名创意工坊？</h3><span class="faq-arrow text-orange-500">▼</span></div></div><div class="faq-content max-h-0 overflow-hidden transition-all duration-300"><div class="p-4 text-gray-400">购买参会门票后可在官网选报工坊，每个工坊限30人，先到先得。VIP精英票享有优先选报权。如场次满额，可加入等候名单，有取消的话会优先通知。</div></div></div>
+        <div class="faq-item"><div class="faq-header p-4 hover:bg-cyan-400 hover:bg-opacity-5"><div class="flex items-center justify-between"><h3 class="text-lg font-bold">活动地点在哪里？如何到达？</h3><span class="faq-arrow text-cyan-400">▼</span></div></div><div class="faq-content max-h-0 overflow-hidden transition-all duration-300"><div class="p-4 text-gray-400">地点：深圳市福田区深圳设计中心（福田街道兰花路3009号）。地铁：9号线深康站B出口，步行500米；公交：多条线路直达；停车：中心配备800个停车位，日票¥5。</div></div></div>
+        <div class="faq-item"><div class="faq-header p-4 hover:bg-cyan-400 hover:bg-opacity-5"><div class="flex items-center justify-between"><h3 class="text-lg font-bold">是否有餐饮和住宿建议？</h3><span class="faq-arrow text-orange-500">▼</span></div></div><div class="faq-content max-h-0 overflow-hidden transition-all duration-300"><div class="p-4 text-gray-400">参会门票已含每日午餐。场馆周边有多家五星酒店：皇岗口岸洲际酒店（200米）、福田香格里拉（400米）。官方合作酒店享受10%折扣。</div></div></div>
+        <div class="faq-item"><div class="faq-header p-4 hover:bg-cyan-400 hover:bg-opacity-5"><div class="flex items-center justify-between"><h3 class="text-lg font-bold">可以带朋友或团队吗？有团体优惠吗？</h3><span class="faq-arrow text-cyan-400">▼</span></div></div><div class="faq-content max-h-0 overflow-hidden transition-all duration-300"><div class="p-4 text-gray-400">当然欢迎！10人以上团购享受8折优惠，30人以上享受7折，并配备专属导览员。企业团体还可定制专属沙龙和合作洽谈。请邮件至 team@flux2040.com 咨询。</div></div></div>
+        <div class="faq-item"><div class="faq-header p-4 hover:bg-cyan-400 hover:bg-opacity-5"><div class="flex items-center justify-between"><h3 class="text-lg font-bold">创意竞赛如何参与？奖金多少？</h3><span class="faq-arrow text-orange-500">▼</span></div></div><div class="faq-content max-h-0 overflow-hidden transition-all duration-300"><div class="p-4 text-gray-400">年度创意竞赛全球开放征集，截止日期11月10日。参赛免费，可个人或团队报名。总奖池¥50万：一等奖¥15万+国际展览机会；二等奖¥10万；三等奖¥5万。详见官网竞赛板块。</div></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 最终 CTA -->
+  <section class="py-20 relative">
+    <div class="max-w-5xl mx-auto px-4">
+      <div class="relative rounded-2xl p-12 overflow-hidden border border-cyan-400 border-opacity-50 hover:border-opacity-100 transition">
+        <div class="absolute inset-0 bg-gradient-to-r from-cyan-400 to-orange-500 opacity-5"></div>
+        <div class="absolute top-0 right-0 w-64 h-64 bg-orange-500 opacity-5 rounded-full blur-3xl -mr-32 -mt-32"></div>
+        <div class="relative z-10 text-center">
+          <h2 class="text-4xl sm:text-5xl font-black mb-6"><span class="text-cyan-400">加入</span>全球设计创意社群</h2>
+          <p class="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
+            Flux 2040 不仅是一个展览，更是一场关于未来城市的集体想象。你的创意，将影响千万人的城市体验。
+          </p>
+          <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            <button class="btn-gradient text-black font-bold py-3 px-8 rounded-lg text-lg">立即购票</button>
+            <button class="border-2 border-cyan-400 text-cyan-400 font-bold py-3 px-8 rounded-lg text-lg hover:bg-cyan-400 hover:bg-opacity-10 transition">查看完整日程</button>
+          </div>
+          <p class="text-gray-400 text-sm mt-8">早鸟优惠倒计时：<span class="text-orange-500 font-bold">10天</span> • 参会门票立减¥50</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 页脚 -->
+  <footer class="border-t border-cyan-400 border-opacity-20 py-12">
+    <div class="max-w-7xl mx-auto px-4">
+      <div class="grid md:grid-cols-4 gap-8 mb-8">
+        <div>
+          <h4 class="font-bold text-cyan-400 mb-4">Flux 2040</h4>
+          <p class="text-gray-400 text-sm">全球顶级设计师汇聚的城市设计周，探索2040年城市的无限可能。</p>
+        </div>
+        <div>
+          <h4 class="font-bold text-orange-500 mb-4">快速链接</h4>
+          <ul class="space-y-2 text-gray-400 text-sm">
+            <li><a href="#highlights" class="hover:text-cyan-400 transition">活动亮点</a></li>
+            <li><a href="#schedule" class="hover:text-cyan-400 transition">议程安排</a></li>
+            <li><a href="#tickets" class="hover:text-cyan-400 transition">购买门票</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="font-bold text-cyan-400 mb-4">联系我们</h4>
+          <ul class="space-y-2 text-gray-400 text-sm">
+            <li>Email: info@flux2040.com</li>
+            <li>电话: 400-888-2040</li>
+            <li>地址: 深圳福田设计中心</li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="font-bold text-orange-500 mb-4">关注我们</h4>
+          <div class="flex gap-4 text-gray-400 text-sm">
+            <a href="#" class="hover:text-cyan-400 transition">微博</a>
+            <a href="#" class="hover:text-orange-500 transition">微信</a>
+            <a href="#" class="hover:text-cyan-400 transition">抖音</a>
+            <a href="#" class="hover:text-orange-500 transition">Instagram</a>
+          </div>
+        </div>
+      </div>
+      <div class="border-t border-cyan-400 border-opacity-20 pt-8 text-center text-gray-400 text-sm">
+        <p>© 2024 Flux 2040 城市设计周 | 粤ICP备2024000000号</p>
+        <p class="mt-2">由 Flux Design Group 主办 | 战略合作伙伴：深圳市设计联合会、国际建筑师协会</p>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // 移动端菜单
+    const btn = document.getElementById('mobileMenuBtn'), menu = document.getElementById('mobileMenu');
+    let open = false;
+    btn.addEventListener('click', () => {
+      open = !open;
+      menu.classList.toggle('hidden');
+      btn.textContent = open ? '✕' : '☰';
+    });
+    menu.querySelectorAll('a').forEach(a => a.addEventListener('click', () => {
+      open = false;
+      menu.classList.add('hidden');
+      btn.textContent = '☰';
+    }));
+
+    // Tabs 切换
+    const scheduleLabel = document.getElementById('scheduleLabel');
+    const scheduleSummary = document.getElementById('scheduleSummary');
+    function updateScheduleMeta(tabButton) {
+      if (!tabButton || !scheduleLabel || !scheduleSummary) return;
+      scheduleLabel.textContent = tabButton.getAttribute('data-label') || '';
+      scheduleSummary.textContent = tabButton.getAttribute('data-summary') || '';
+    }
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+        btn.classList.add('active');
+        document.getElementById(btn.getAttribute('data-tab')).classList.remove('hidden');
+        updateScheduleMeta(btn);
+      });
+    });
+    updateScheduleMeta(document.querySelector('.tab-btn.active'));
+
+    // FAQ 手风琴
+    document.querySelectorAll('.faq-item').forEach(item => {
+      item.querySelector('.faq-header').addEventListener('click', () => {
+        const content = item.querySelector('.faq-content');
+        item.classList.toggle('active');
+        content.style.maxHeight = item.classList.contains('active') ? content.scrollHeight + 'px' : '0';
+      });
+    });
+
+    // 数字计数
+    function countUp(el, target, duration = 2000) {
+      let current = 0, increment = target / (duration / 16);
+      const timer = setInterval(() => {
+        current += increment;
+        el.textContent = current >= target ? target : Math.floor(current);
+        if (current >= target) clearInterval(timer);
+      }, 16);
+    }
+
+    // 观察数字区块触发计数
+    const counters = document.querySelectorAll('.counter');
+    let animated = false;
+    new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting && !animated) {
+          counters.forEach(c => countUp(c, parseInt(c.getAttribute('data-target'))));
+          animated = true;
+        }
+      });
+    }).observe(counters[0]?.closest('section'));
+
+    // 导航高亮
+    function updateNav() {
+      const sections = document.querySelectorAll('section[id]');
+      let current = '';
+      sections.forEach(s => {
+        if (window.scrollY >= s.offsetTop - 200) current = s.getAttribute('id');
+      });
+      document.querySelectorAll('.nav-link').forEach(link => {
+        link.classList.toggle('active', link.getAttribute('href') === '#' + current);
+      });
+    }
+    window.addEventListener('scroll', updateNav);
+    updateNav();
+
+    // Hero 跟随光晕
+    const heroStage = document.querySelector('.hero-stage');
+    const heroHalo = document.getElementById('heroHalo');
+    if (heroStage && heroHalo) {
+      heroStage.addEventListener('mousemove', (event) => {
+        const rect = heroStage.getBoundingClientRect();
+        const x = event.clientX - rect.left - heroHalo.offsetWidth / 2;
+        const y = event.clientY - rect.top - heroHalo.offsetHeight / 2;
+        heroHalo.style.transform = `translate(${x}px, ${y}px)`;
+      });
+      heroStage.addEventListener('mouseleave', () => {
+        heroHalo.style.transform = 'translate(calc(50vw - 14rem), calc(50vh - 14rem))';
+      });
+    }
+  </script>
+</body>
+</html>

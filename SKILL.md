@@ -15,9 +15,22 @@ Use the repo-root launcher [scripts/remotecc.py](scripts/remotecc.py). It loads 
 2. Create a session.
    Default to `--profile standard` unless the task clearly needs something else.
 3. Gate non-interactive automation with `ready --json`.
-4. Run `start`, `send`, `capture`, `pull`, and `close` against that session.
+4. Run `start`, `send`, `observe`, `pull`, and `close` against that session.
 
 Treat the remote side as the active writer while Claude Code is editing files. Pull changes back when you need them locally.
+
+## Low-Burden Rules
+
+- Do not invoke remote Claude just to check whether a local file exists, inspect a path, or read a tiny local fact. Use local shell checks first.
+- Prefer `haiku` or profile `simple` for CRUD tests, single-file edits, exact-path updates, grep-like work, and short summaries.
+- For `haiku`, keep one prompt to one step whenever possible: create, then inspect, then update, then delete. Do not bundle many file mutations together.
+- Always pass exact target paths. If the path is ambiguous, verify it locally before sending the prompt.
+- Default to file-tool prompts. Explicitly say `do not run bash` unless shell execution is required.
+- For anything that may run longer or produce a lot of output, prefer `send --no-wait` followed by `observe`; keep `capture` for deep manual inspection only.
+- If `send` returns `blocked:` or `ready --json` reports a `blocker_kind`, resolve it with `approve` instead of resending the same task.
+- After approving a blocker, inspect with `observe`, `capture`, or `pull`; do not replay the original prompt unless the prior attempt clearly failed.
+- If a session mirrors the whole repo root, treat `pull --force` as a destructive sync from the remote mirror. For self-hosted testing, prefer a narrower `--local-dir` such as `demo/...` unless overwriting local work is intended.
+- Do not parallelize dependent lifecycle operations. In particular, never run `pull` and `close --drop-remote` at the same time.
 
 ## Core Workflow
 
@@ -27,6 +40,10 @@ Treat the remote side as the active writer while Claude Code is editing files. P
   `python3 scripts/remotecc.py create demo user@host --local-dir /abs/project --profile standard`
 - Add `--password-auth` only when a human can enter the SSH password or key passphrase once.
 - If the remote Claude CLI will ask for workspace trust or edit approval, clear that manually once during bootstrap or use `--claude-command "claude --dangerously-skip-permissions"` only when that tradeoff is acceptable.
+- When the blocker is already visible, prefer:
+  `python3 scripts/remotecc.py approve demo`
+  or persistent approval during a short test lane:
+  `python3 scripts/remotecc.py approve demo --mode session`
 
 ### Run
 
@@ -36,7 +53,19 @@ Treat the remote side as the active writer while Claude Code is editing files. P
   `python3 scripts/remotecc.py start demo`
 - Send work:
   `python3 scripts/remotecc.py send demo --text "..." --profile standard`
-- Inspect recent pane output:
+- For async or potentially verbose work:
+  `python3 scripts/remotecc.py send demo --text "..." --profile standard --no-wait`
+- If Claude stops at a workspace-trust, edit, or bash approval screen:
+  `python3 scripts/remotecc.py approve demo`
+- If `approve` is called immediately after `start`, let it detect the blocker:
+  `python3 scripts/remotecc.py approve demo --detect-timeout 8`
+- For repeated edits in one short lane, prefer:
+  `python3 scripts/remotecc.py approve demo --mode session`
+- Observe the recent tail safely:
+  `python3 scripts/remotecc.py observe demo`
+- Follow an async run until it stops changing, blocks, or errors:
+  `python3 scripts/remotecc.py observe demo --follow`
+- Use deeper pane capture only when tail-safe observation is not enough:
   `python3 scripts/remotecc.py capture demo --lines 200`
 
 ### Collect

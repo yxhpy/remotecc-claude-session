@@ -1,0 +1,5 @@
+step=observe
+model=haiku
+status=verified
+mode=async
+check=follow
