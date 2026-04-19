@@ -55,6 +55,20 @@ After that, Codex can invoke it by name:
 $remotecc-claude-session
 ```
 
+## Install With skill-installer
+
+If you already use Codex's built-in `skill-installer`, install this repo-root skill with:
+
+```bash
+python3 ~/.codex/skills/.system/skill-installer/scripts/install-skill-from-github.py --repo yxhpy/remotecc-claude-session --path . --name remotecc-claude-session --method git
+```
+
+Notes:
+
+- `--path .` is required because this repository root is the skill root.
+- `--method git` is the reliable fallback when Python download mode hits local SSL certificate issues.
+- Restart Codex after installation so the new skill is discovered.
+
 ## Requirements
 
 Local machine:
@@ -272,3 +286,4 @@ Local session state is stored at:
 
 - [SKILL.md](./SKILL.md)
 - [references/command-cookbook.md](./references/command-cookbook.md)
+- [README.zh-CN.md](./README.zh-CN.md)
