@@ -1,99 +1,78 @@
 # remotecc
 
-`remotecc` is a minimal CLI and Codex skill root for running Claude Code in a remote SSH workspace with explicit session management.
+![Python](https://img.shields.io/badge/python-3.10%2B-0f172a?style=flat-square)
+![Workflow](https://img.shields.io/badge/workflow-ssh%20%2B%20tmux%20%2B%20rsync-1d4ed8?style=flat-square)
+![Status](https://img.shields.io/badge/status-mvp-0f766e?style=flat-square)
 
-This repository root is the source of truth.
+Session-first remote orchestration for Claude Code over SSH.
 
-- The Python package lives in `src/remotecc`
-- The Codex skill lives at this repo root via `SKILL.md`
-- The repo-root launcher is `scripts/remotecc.py`
+`remotecc` mirrors a local project to a remote machine, starts Claude Code inside a persistent `tmux` session, routes model choice explicitly, and pulls changes back with a simple, auditable workflow.
 
-There is no second vendored skill repo to maintain.
+This repository is both:
 
-## What It Does
+- the Python package in [src/remotecc](./src/remotecc)
+- the Codex skill root via [SKILL.md](./SKILL.md)
 
-`remotecc` is built around this workflow:
+## Highlights
 
-1. Sync a local project to a remote machine with `rsync`
-2. Start Claude Code inside remote `tmux`
-3. Send prompts from Codex or the shell
-4. Pull changed files back locally
-5. Keep local session state in a durable registry
+- Session-first by design. A local registry keeps remote workspace, `tmux`, model, and auth state explicit.
+- Skill-ready. `ready --json` and `models --json` provide stable machine interfaces for upstream skills and automations.
+- Pragmatic transport. Uses `rsync + ssh + tmux` instead of pretending a remote filesystem mount is reliable enough for agent workflows.
+- Human-bootstrap compatible. Password-auth sessions are supported through SSH control master without storing the password.
+- Model-aware. Supports `haiku`, `sonnet`, `opus`, `opusplan`, and profile-based routing.
 
-For the MVP, this deliberately uses `rsync + ssh + tmux` instead of a mounted remote filesystem.
+## Architecture
 
-## Why This Shape
+```mermaid
+flowchart LR
+    local["Local project"]
+    registry["Local session registry<br/>~/.remotecc/sessions.json"]
+    ssh["SSH / control master"]
+    tmux["Remote tmux session"]
+    claude["Claude Code"]
 
-This first version avoids SSHFS-style mounts on purpose:
+    local -->|"rsync push / pull"| tmux
+    registry --> tmux
+    ssh --> tmux
+    tmux --> claude
+```
 
-- session stability matters more than live POSIX mount behavior
-- reconnect and latency behavior is easier to reason about
-- a single-writer remote workflow is much easier to keep safe
+## Why This Exists
 
-## Repository Layout
+Remote-agent workflows usually fail in boring places: broken reconnects, invisible session state, unclear model routing, or ad hoc shell tabs that nobody can recover later.
 
-- [SKILL.md](./SKILL.md): Codex skill instructions
-- [agents/openai.yaml](./agents/openai.yaml): skill UI metadata
-- [scripts/remotecc.py](./scripts/remotecc.py): run from repo root without installation
-- [references/command-cookbook.md](./references/command-cookbook.md): concrete command patterns
-- [src/remotecc](./src/remotecc): actual Python implementation
-- [README.zh-CN.md](./README.zh-CN.md): Chinese user-facing guide
+`remotecc` chooses a narrower path on purpose:
 
-## Requirements
+- one explicit remote workspace per session
+- one durable `tmux` session per task lane
+- one local registry as the operational source of truth
+- one predictable sync model instead of live remote mounts
 
-Local:
+That makes the MVP easier to reason about, easier to automate, and easier to recover.
 
-- `ssh`
-- `rsync`
-- Python 3.10+
+## Installation
 
-Remote:
-
-- `bash`
-- `tmux`
-- `rsync`
-- `claude` CLI installed and already authenticated
-
-The local `rsync` flags stay conservative so the CLI works with the older implementation that ships on macOS.
-
-## Local Development
-
-Install in editable mode from this repo root:
+### Install the CLI locally
 
 ```bash
-cd /path/to/remotecc
 python3 -m pip install -e .
 ```
 
-Or run directly from the repo root without installation:
+Or run directly from the repo root:
 
 ```bash
 python3 scripts/remotecc.py --help
 ```
 
-## Use As A Codex Skill
+### Install as a Codex skill
 
-This repo root itself is the skill root. After installation, Codex can invoke:
-
-```text
-$remotecc-claude-session
-```
-
-Example prompt:
-
-```text
-Use $remotecc-claude-session to create a remote Claude session on root@example.com for /Users/me/project, use the standard profile, start it, and report whether it is ready for non-interactive use.
-```
-
-## Install As A Skill
-
-### Option 1: clone manually
+Manual clone:
 
 ```bash
 git clone https://github.com/yxhpy/remotecc-claude-session.git ~/.codex/skills/remotecc-claude-session
 ```
 
-### Option 2: use `skill-installer`
+Via `skill-installer`:
 
 ```bash
 python3 ~/.codex/skills/.system/skill-installer/scripts/install-skill-from-github.py --repo yxhpy/remotecc-claude-session --path . --name remotecc-claude-session --method git
@@ -101,25 +80,42 @@ python3 ~/.codex/skills/.system/skill-installer/scripts/install-skill-from-githu
 
 Notes:
 
-- `--path .` is required because the repository root is the skill root
-- `--method git` is the reliable fallback when Python download mode hits local SSL certificate issues
-- restart Codex after installation so the skill is discovered
+- `--path .` is required because the repository root is the skill root.
+- `--method git` is the reliable fallback when Python download mode hits local SSL certificate issues.
+- Restart Codex after installation so the skill is discovered.
+
+## Requirements
+
+Local machine:
+
+- `ssh`
+- `rsync`
+- Python 3.10+
+
+Remote machine:
+
+- `bash`
+- `tmux`
+- `rsync`
+- `claude` CLI installed and already authenticated
+
+The sync flags stay conservative so the CLI works with the older `rsync` implementation that ships on macOS.
 
 ## Quick Start
 
-Create a session from the current repo root:
+Create a session:
 
 ```bash
 python3 scripts/remotecc.py create demo user@host --local-dir . --profile standard
 ```
 
-Use password-auth bootstrap if the first connection needs password or passphrase entry:
+Bootstrap with password-auth when the first connection needs a password or key passphrase:
 
 ```bash
 python3 scripts/remotecc.py create demo user@host --local-dir . --profile standard --password-auth
 ```
 
-Check whether a skill can continue non-interactively:
+Check non-interactive readiness:
 
 ```bash
 python3 scripts/remotecc.py ready demo --json
@@ -137,7 +133,7 @@ Send one request:
 python3 scripts/remotecc.py send demo --text "Inspect this repo and summarize the entrypoint."
 ```
 
-Pull remote edits back:
+Pull changes back:
 
 ```bash
 python3 scripts/remotecc.py pull demo
@@ -149,27 +145,39 @@ Close the session:
 python3 scripts/remotecc.py close demo --drop-remote
 ```
 
-## Session Model
+## Use From Codex
 
-Each session stores:
+After skill installation, Codex can invoke:
+
+```text
+$remotecc-claude-session
+```
+
+Example prompt:
+
+```text
+Use $remotecc-claude-session to create a remote Claude session on user@host for /abs/project, use the standard profile, start it, and report whether it is ready for non-interactive use.
+```
+
+## Session Lifecycle
+
+Each session tracks:
 
 - local working directory
 - SSH target
 - remote workspace path
 - remote `tmux` session name
 - Claude command
-- model profile and model alias
+- model alias and profile
 - lifecycle timestamps
 
-State is stored locally in:
+Local state is stored in:
 
 ```text
 ~/.remotecc/sessions.json
 ```
 
-Treat the remote workspace as the active writer while Claude Code is running.
-
-Recommended flow:
+Recommended operational flow:
 
 1. `create`
 2. `ready --json`
@@ -178,14 +186,16 @@ Recommended flow:
 5. `pull`
 6. `close`
 
-## Authentication Model
+While Claude Code is actively editing, treat the remote workspace as the active writer.
+
+## Authentication Posture
 
 There are two intended modes:
 
-- key-based SSH: preferred for unattended use
-- `--password-auth`: bootstrap path when a human can unlock the session once
+- key-based SSH for unattended use
+- `--password-auth` for human bootstrap
 
-`--password-auth` does not store the password. It creates a session-scoped SSH control master so later `ssh` and `rsync` commands can reuse that connection.
+`--password-auth` does not store passwords. It opens a session-scoped SSH control master so later `ssh` and `rsync` calls can reuse the same authenticated channel.
 
 If the control socket expires:
 
@@ -193,27 +203,14 @@ If the control socket expires:
 python3 scripts/remotecc.py connect demo
 ```
 
-For skill use, the rule is simple:
+For skills and automations, the rule is simple:
 
 - a human may bootstrap
-- the skill should only continue when `ready --json` says the session is safe
+- automation should only continue when `ready --json` says the session is usable
 
-## Claude First-Run Prompts
+## Claude Model Routing
 
-The first remote run may still block on Claude Code itself, for example:
-
-- workspace trust
-- edit approval
-
-That is not an SSH problem. Clear it manually once during bootstrap, or choose a deliberately permissive Claude command only when that tradeoff is acceptable:
-
-```bash
-python3 scripts/remotecc.py create demo user@host --local-dir . --model opus --claude-command "claude --dangerously-skip-permissions"
-```
-
-## Model Routing
-
-Ask for machine-readable routing guidance:
+Ask for machine-readable guidance:
 
 ```bash
 python3 scripts/remotecc.py models --json
@@ -230,7 +227,7 @@ Default profiles:
 Practical guidance:
 
 - `haiku` or `hk`: listing, grep, summaries, tiny low-risk edits
-- `sonnet`: daily coding, normal implementation, common bug fixes
+- `sonnet`: everyday implementation, common bug fixes, medium refactors
 - `opus`: architecture, risky migrations, ambiguous debugging, deep review
 - `opusplan`: planning-first workflows where plan quality matters most
 
@@ -244,26 +241,42 @@ python3 scripts/remotecc.py set-model demo --profile complex
 python3 scripts/remotecc.py send demo --profile simple --text "Summarize this folder."
 ```
 
-## Minimal Closed Loop
+## Operational Notes
+
+Claude Code itself may still prompt on first use for:
+
+- workspace trust
+- edit approval
+
+That is separate from SSH auth. Clear those prompts once during bootstrap, or choose a deliberately permissive Claude command only when that tradeoff is acceptable:
 
 ```bash
-python3 scripts/remotecc.py create demo user@host --local-dir . --profile standard --password-auth
-python3 scripts/remotecc.py ready demo --json
-python3 scripts/remotecc.py start demo
-python3 scripts/remotecc.py send demo --text "Create a file named smoke.txt containing OK."
-python3 scripts/remotecc.py pull demo --force
-python3 scripts/remotecc.py close demo --drop-remote
+python3 scripts/remotecc.py create demo user@host --local-dir . --model opus --claude-command "claude --dangerously-skip-permissions"
 ```
 
-## Limits
+## Scope and Limits
 
-- no live mounted filesystem
-- no automatic conflict resolution
-- no remote sandboxing
-- pane-based output capture instead of a structured Claude API
+- No live mounted filesystem
+- No automatic conflict resolution
+- No remote sandboxing
+- Pane-based output capture rather than a structured Claude API
 
-## Related Docs
+This is an MVP session layer, not a distributed development environment.
 
-- [README.zh-CN.md](./README.zh-CN.md)
-- [SKILL.md](./SKILL.md)
-- [references/command-cookbook.md](./references/command-cookbook.md)
+## Project Status
+
+The project is intentionally narrow and operational:
+
+- repo-root skill packaging is in place
+- remote session bootstrap and recovery are implemented
+- model routing is explicit and machine-readable
+- basic closed-loop validation has been completed
+
+## Repository Layout
+
+- [SKILL.md](./SKILL.md): Codex skill instructions
+- [agents/openai.yaml](./agents/openai.yaml): skill UI metadata
+- [scripts/remotecc.py](./scripts/remotecc.py): repo-root launcher
+- [references/command-cookbook.md](./references/command-cookbook.md): command patterns and common failures
+- [src/remotecc](./src/remotecc): Python implementation
+- [README.zh-CN.md](./README.zh-CN.md): Chinese guide

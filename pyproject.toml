@@ -5,13 +5,40 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "remotecc"
 version = "0.1.0"
-description = "SSH + tmux based remote Claude CLI session manager"
+description = "Session-first SSH/tmux orchestration for running Claude Code remotely with rsync sync and Codex skill integration"
 readme = "README.md"
 requires-python = ">=3.10"
 authors = [
-  { name = "Codex" }
+  { name = "yxhpy" }
+]
+keywords = [
+  "claude-code",
+  "ssh",
+  "tmux",
+  "rsync",
+  "remote-development",
+  "codex-skill",
+]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "Operating System :: MacOS",
+  "Operating System :: POSIX :: Linux",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Software Development :: Build Tools",
+  "Topic :: System :: Networking",
+  "Topic :: Utilities",
 ]
 dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/yxhpy/remotecc-claude-session"
+Repository = "https://github.com/yxhpy/remotecc-claude-session"
+Issues = "https://github.com/yxhpy/remotecc-claude-session/issues"
 
 [project.scripts]
 remotecc = "remotecc.cli:main"

@@ -1,4 +1,4 @@
 interface:
   display_name: "Remote Claude Sessions"
-  short_description: "Drive remote Claude Code over SSH sessions"
-  default_prompt: "Use $remotecc-claude-session to run Claude Code in a remote SSH workspace with managed sessions."
+  short_description: "Operate Claude Code remotely over SSH with managed sessions"
+  default_prompt: "Use $remotecc-claude-session to operate Claude Code in a remote SSH workspace with explicit session management, model routing, and pullback of edits."
