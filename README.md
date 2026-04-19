@@ -3,6 +3,8 @@
 ![Python](https://img.shields.io/badge/python-3.10%2B-0f172a?style=flat-square)
 ![Workflow](https://img.shields.io/badge/workflow-ssh%20%2B%20tmux%20%2B%20rsync-1d4ed8?style=flat-square)
 ![Status](https://img.shields.io/badge/status-mvp-0f766e?style=flat-square)
+![CI](https://img.shields.io/github/actions/workflow/status/yxhpy/remotecc-claude-session/ci.yml?branch=main&style=flat-square)
+![License](https://img.shields.io/github/license/yxhpy/remotecc-claude-session?style=flat-square)
 
 Session-first remote orchestration for Claude Code over SSH.
 
@@ -280,3 +282,15 @@ The project is intentionally narrow and operational:
 - [references/command-cookbook.md](./references/command-cookbook.md): command patterns and common failures
 - [src/remotecc](./src/remotecc): Python implementation
 - [README.zh-CN.md](./README.zh-CN.md): Chinese guide
+- [CONTRIBUTING.md](./CONTRIBUTING.md): contribution workflow
+- [SECURITY.md](./SECURITY.md): security reporting
+- [CHANGELOG.md](./CHANGELOG.md): release history
+
+## Community and Governance
+
+- [LICENSE](./LICENSE)
+- [CONTRIBUTING.md](./CONTRIBUTING.md)
+- [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md)
+- [SECURITY.md](./SECURITY.md)
+- [SUPPORT.md](./SUPPORT.md)
+- [CHANGELOG.md](./CHANGELOG.md)

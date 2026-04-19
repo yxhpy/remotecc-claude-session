@@ -3,6 +3,8 @@
 ![Python](https://img.shields.io/badge/python-3.10%2B-0f172a?style=flat-square)
 ![Workflow](https://img.shields.io/badge/workflow-ssh%20%2B%20tmux%20%2B%20rsync-1d4ed8?style=flat-square)
 ![Status](https://img.shields.io/badge/status-mvp-0f766e?style=flat-square)
+![CI](https://img.shields.io/github/actions/workflow/status/yxhpy/remotecc-claude-session/ci.yml?branch=main&style=flat-square)
+![License](https://img.shields.io/github/license/yxhpy/remotecc-claude-session?style=flat-square)
 
 一个面向 Claude Code 的远程会话编排层，强调可恢复、可审计、可自动化。
 
@@ -287,3 +289,15 @@ python3 scripts/remotecc.py create demo user@host --local-dir . --model opus --c
 - [references/command-cookbook.md](./references/command-cookbook.md)：命令示例与常见故障
 - [src/remotecc](./src/remotecc)：Python 实现
 - [README.md](./README.md)：英文说明
+- [CONTRIBUTING.md](./CONTRIBUTING.md)：贡献流程
+- [SECURITY.md](./SECURITY.md)：安全报告说明
+- [CHANGELOG.md](./CHANGELOG.md)：版本记录
+
+## 仓库治理
+
+- [LICENSE](./LICENSE)
+- [CONTRIBUTING.md](./CONTRIBUTING.md)
+- [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md)
+- [SECURITY.md](./SECURITY.md)
+- [SUPPORT.md](./SUPPORT.md)
+- [CHANGELOG.md](./CHANGELOG.md)

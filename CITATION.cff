@@ -1,0 +1,10 @@
+cff-version: 1.2.0
+title: remotecc
+message: If you use this project, please cite the repository.
+type: software
+authors:
+  - alias: yxhpy
+repository-code: https://github.com/yxhpy/remotecc-claude-session
+url: https://github.com/yxhpy/remotecc-claude-session
+license: MIT
+version: 0.1.0

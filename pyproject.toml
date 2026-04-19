@@ -8,6 +8,7 @@ version = "0.1.0"
 description = "Session-first SSH/tmux orchestration for running Claude Code remotely with rsync sync and Codex skill integration"
 readme = "README.md"
 requires-python = ">=3.10"
+license = { file = "LICENSE" }
 authors = [
   { name = "yxhpy" }
 ]
@@ -22,6 +23,7 @@ keywords = [
 classifiers = [
   "Development Status :: 3 - Alpha",
   "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
   "Operating System :: MacOS",
   "Operating System :: POSIX :: Linux",
   "Programming Language :: Python :: 3",
@@ -38,6 +40,7 @@ dependencies = []
 [project.urls]
 Homepage = "https://github.com/yxhpy/remotecc-claude-session"
 Repository = "https://github.com/yxhpy/remotecc-claude-session"
+Documentation = "https://github.com/yxhpy/remotecc-claude-session#readme"
 Issues = "https://github.com/yxhpy/remotecc-claude-session/issues"
 
 [project.scripts]
