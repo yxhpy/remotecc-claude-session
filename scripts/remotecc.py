@@ -5,9 +5,11 @@ import sys
 from pathlib import Path
 
 
-LIB_DIR = Path(__file__).resolve().parent / "remotecc_lib"
-if str(LIB_DIR) not in sys.path:
-    sys.path.insert(0, str(LIB_DIR))
+SCRIPT_DIR = Path(__file__).resolve().parent
+SRC_DIR = Path(__file__).resolve().parents[1] / "src"
+sys.path = [path for path in sys.path if Path(path or ".").resolve() != SCRIPT_DIR]
+if str(SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(SRC_DIR))
 
 from remotecc.cli import main
 

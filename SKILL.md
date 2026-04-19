@@ -5,15 +5,16 @@ description: Manage remote Claude Code workspaces over SSH with persistent tmux 
 
 # Remote Claude Session
 
-Use the bundled launcher [scripts/remotecc.py](scripts/remotecc.py). It vendors the `remotecc` code inside the skill, so the skill does not depend on the source repo that created it.
+This repository root is the skill root.
+
+Use the repo-root launcher [scripts/remotecc.py](scripts/remotecc.py). It loads the source package from `src/` directly, so the skill stays aligned with the code in this same repository.
 
 ## Quick Start
 
-1. Ask the launcher for machine-readable model guidance when another skill or agent needs routing:
-   `python3 /path/to/scripts/remotecc.py models --json`
+1. Use `python3 scripts/remotecc.py models --json` when another skill or agent needs machine-readable routing guidance.
 2. Create a session.
    Default to `--profile standard` unless the task clearly needs something else.
-3. Gate automation with `ready --json`.
+3. Gate non-interactive automation with `ready --json`.
 4. Run `start`, `send`, `capture`, `pull`, and `close` against that session.
 
 Treat the remote side as the active writer while Claude Code is editing files. Pull changes back when you need them locally.
@@ -23,31 +24,31 @@ Treat the remote side as the active writer while Claude Code is editing files. P
 ### Bootstrap
 
 - Create a session:
-  `python3 /path/to/scripts/remotecc.py create demo user@host --local-dir /abs/project --profile standard`
+  `python3 scripts/remotecc.py create demo user@host --local-dir /abs/project --profile standard`
 - Add `--password-auth` only when a human can enter the SSH password or key passphrase once.
 - If the remote Claude CLI will ask for workspace trust or edit approval, clear that manually once during bootstrap or use `--claude-command "claude --dangerously-skip-permissions"` only when that tradeoff is acceptable.
 
 ### Run
 
 - Verify the session is safe for non-interactive use:
-  `python3 /path/to/scripts/remotecc.py ready demo --json`
+  `python3 scripts/remotecc.py ready demo --json`
 - Start Claude Code:
-  `python3 /path/to/scripts/remotecc.py start demo`
+  `python3 scripts/remotecc.py start demo`
 - Send work:
-  `python3 /path/to/scripts/remotecc.py send demo --text "..." --profile standard`
+  `python3 scripts/remotecc.py send demo --text "..." --profile standard`
 - Inspect recent pane output:
-  `python3 /path/to/scripts/remotecc.py capture demo --lines 200`
+  `python3 scripts/remotecc.py capture demo --lines 200`
 
 ### Collect
 
 - Pull changes back:
-  `python3 /path/to/scripts/remotecc.py pull demo`
+  `python3 scripts/remotecc.py pull demo`
 - If Claude is still running and you intentionally want the current remote state, use `--force`.
 
 ### Tear Down
 
 - Close the session:
-  `python3 /path/to/scripts/remotecc.py close demo --drop-remote`
+  `python3 scripts/remotecc.py close demo --drop-remote`
 
 ## Model Routing
 
@@ -74,7 +75,7 @@ The launcher persists the configured model in the session registry and switches 
 - Session state lives in `~/.remotecc/sessions.json`.
 - Closed sessions are historical records; do not try to `push`, `start`, `send`, `attach`, or `chat` against them.
 - If the control master expires on a password-auth session, reconnect with:
-  `python3 /path/to/scripts/remotecc.py connect demo`
+  `python3 scripts/remotecc.py connect demo`
 
 ## References
 

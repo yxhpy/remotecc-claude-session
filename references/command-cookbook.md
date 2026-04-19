@@ -1,8 +1,8 @@
 # Command Cookbook
 
-Use the bundled launcher:
+Use the repo-root launcher:
 
-`python3 /absolute/path/to/scripts/remotecc.py ...`
+`python3 scripts/remotecc.py ...`
 
 ## Bootstrap Examples
 
