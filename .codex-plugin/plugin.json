@@ -1,0 +1,42 @@
+{
+  "name": "remotecc-claude-session",
+  "version": "0.1.0",
+  "description": "Manage remote Claude Code workspaces over SSH with persistent tmux sessions, rsync sync, readiness gates, blocker approval, model routing, and Codex-friendly observation workflows.",
+  "author": {
+    "name": "yxhpy",
+    "url": "https://github.com/yxhpy"
+  },
+  "homepage": "https://github.com/yxhpy/remotecc-claude-session",
+  "repository": "https://github.com/yxhpy/remotecc-claude-session",
+  "license": "MIT",
+  "keywords": [
+    "codex",
+    "claude-code",
+    "remote-session",
+    "ssh",
+    "tmux",
+    "rsync",
+    "skills",
+    "automation"
+  ],
+  "skills": "./SKILL.md",
+  "interface": {
+    "displayName": "RemoteCC Claude Session",
+    "shortDescription": "Run recoverable Claude Code sessions on remote hosts from Codex.",
+    "longDescription": "RemoteCC mirrors a local workspace to a remote host, starts Claude Code inside a persistent tmux session, routes model choice explicitly, exposes ready/observe machine gates, handles common Claude approval blockers, and pulls remote edits back through a predictable rsync workflow.",
+    "developerName": "yxhpy",
+    "category": "Developer Tools",
+    "capabilities": [
+      "Read",
+      "Write",
+      "Interactive"
+    ],
+    "websiteURL": "https://github.com/yxhpy/remotecc-claude-session",
+    "defaultPrompt": [
+      "Use RemoteCC to create a remote Claude session for this project.",
+      "Use RemoteCC ready and observe to check a remote Claude run.",
+      "Use RemoteCC to pull completed remote Claude edits back locally."
+    ],
+    "brandColor": "#1D4ED8"
+  }
+}
