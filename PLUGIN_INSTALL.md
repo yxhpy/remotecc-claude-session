@@ -6,6 +6,24 @@ This repository is a Codex plugin root. The plugin manifest lives at:
 .codex-plugin/plugin.json
 ```
 
+For automation and AI installers, prefer [AI_INSTALL.md](./AI_INSTALL.md). It
+contains frontmatter plus a machine-readable JSON install manifest.
+
+## Machine-Readable Summary
+
+```json
+{
+  "type": "codex_plugin",
+  "name": "remotecc-claude-session",
+  "repository": "https://github.com/yxhpy/remotecc-claude-session.git",
+  "install_path": "~/.codex/plugins/remotecc-claude-session",
+  "manifest": ".codex-plugin/plugin.json",
+  "skill": "SKILL.md",
+  "marketplace": ".agents/plugins/marketplace.json",
+  "requires_restart": true
+}
+```
+
 ## Install From Git
 
 Clone the plugin into your local Codex plugins directory:
